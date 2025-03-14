@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.hashers import make_password
 
 class User(models.Model):
     id = models.AutoField(primary_key=True)
@@ -10,6 +11,11 @@ class User(models.Model):
 
     def __str__(self):
         return self.username
+    def save(self, *args, **kwargs):
+        # Hash the password before saving if it's a new user or password is changed
+        if self.password and not self.password.startswith('$'):
+            self.password = make_password(self.password)
+        super(User, self).save(*args, **kwargs)
 
 class Story(models.Model):
     id = models.AutoField(primary_key=True)
