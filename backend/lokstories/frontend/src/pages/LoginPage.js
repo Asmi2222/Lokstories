@@ -3,7 +3,7 @@ import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
 
 
-const Login = () => {
+const LoginPage = () => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -108,4 +108,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginPage;

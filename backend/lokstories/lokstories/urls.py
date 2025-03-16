@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from core import api_views 
-from core.views import register_user, login_user, get_user_data,create_story, get_user_stories, update_story, delete_story
+from core.views import register_user, login_user, get_user_data,create_story, get_user_stories, update_story, delete_story,StoryListView
 from .views import index
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 router = DefaultRouter()
@@ -35,6 +35,7 @@ urlpatterns = [
     path('login/', login_user, name='login_user'),
     path('api/user-data/', get_user_data, name='user-data'),
     path('api/', include(router.urls)),
+    path('api/stories/', StoryListView.as_view(), name='story-list'),
     path('stories/create/', create_story, name='create_story'),
     path('stories/', get_user_stories, name='get_user_stories'),
     path('stories/update/<int:pk>/', update_story, name='update_story'),

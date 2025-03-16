@@ -2,21 +2,27 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from .models import Story
+from .models import CustomRefreshToken, Story
 from .serializers import StorySerializer
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User
+from .models import User, Story
 from .serializers import UserSerializer
 from django.contrib.auth.hashers import check_password
 from django.contrib.auth import authenticate
 import logging
+from rest_framework import generics
+
+from rest_framework.permissions import AllowAny
 
 logger = logging.getLogger(__name__)
 
 
+
+
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def register_user(request):
     data = request.data
     serializer = UserSerializer(data=data)
@@ -28,28 +34,39 @@ def register_user(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+
 @api_view(['POST'])
+@permission_classes([AllowAny]) 
 def login_user(request):
     username = request.data.get('username')
     password = request.data.get('password')
-
-    logger.debug(f"Attempting login for username: {username}")
+    print(request.method)
 
     try:
         user = User.objects.get(username=username)
-        logger.debug(f"User found: {user.username}")
     except User.DoesNotExist:
-        logger.debug(f"User not found: {username}")
         return Response({"message": "Invalid credentials"}, status=400)
 
     if check_password(password, user.password):
-        # Send the user role in the response to be used in frontend
+        # Create an instance of CustomRefreshToken
+        refresh = CustomRefreshToken()
+
+        # Now call for_user method on that instance
+        refresh = refresh.for_user(user)  # Associate the user correctly
+
+        # Get the access token from the refresh token instance
+        access_token = str(refresh.access_token)
+
         return Response({
             "message": "Login successful",
-            "role": user.role
-        })
+            "role": user.role,
+            "access_token": access_token,
+            "refresh_token": str(refresh)
+        }, status=status.HTTP_200_OK)
     else:
         return Response({"message": "Invalid credentials"}, status=400)
+
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -58,20 +75,15 @@ def get_user_data(request):
     return Response({'name': user.name, 'role': user.role})
 
 
+class StoryListView(generics.ListAPIView):
+    queryset = Story.objects.all()
+    serializer_class = StorySerializer
+
 
 @api_view(['POST'])
 
 @permission_classes([IsAuthenticated])  # Only logged-in users can create stories
-def create_story(request):
-    
-    request.data['author'] = request.user.id  # Assign logged-in user as the author
-    serializer = StorySerializer(data=request.data)
-    
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=201)  # Story created successfully
-    
-    return Response(serializer.errors, status=400)  # Error in data
+
 
 def create_story(request):
     """ API endpoint to allow authenticated users to create a story """

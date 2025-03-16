@@ -1,7 +1,27 @@
 from django.db import models
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from rest_framework_simplejwt.tokens import RefreshToken
 
-class User(models.Model):
+# Define the Custom User Manager
+class CustomUserManager(BaseUserManager):
+    def create_user(self, username, password=None, **extra_fields):
+        """Create and return a regular user with a username and password."""
+        if not username:
+            raise ValueError('The Username field must be set')
+        user = self.model(username=username, **extra_fields)
+        user.set_password(password)  # This will hash the password
+        user.save(using=self._db)  # Save the user to the database
+        return user
+
+    def create_superuser(self, username, password=None, **extra_fields):
+        """Create and return a superuser."""
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        
+        return self.create_user(username, password, **extra_fields)
+
+class User(AbstractBaseUser):  # Inherit from AbstractBaseUser
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     username = models.CharField(max_length=255, unique=True)
@@ -9,13 +29,28 @@ class User(models.Model):
     role = models.CharField(max_length=50)
     profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
 
+    # Set the custom manager for this model
+    objects = CustomUserManager()
+
+    # Specify which field will be used as the unique identifier
+    USERNAME_FIELD = 'username'
+
+    # Specify other fields that are required for user creation
+    REQUIRED_FIELDS = ['name', 'role']
+
     def __str__(self):
         return self.username
+
     def save(self, *args, **kwargs):
-        # Hash the password before saving if it's a new user or password is changed
         if self.password and not self.password.startswith('$'):
             self.password = make_password(self.password)
         super(User, self).save(*args, **kwargs)
+
+
+class CustomRefreshToken(RefreshToken):
+    def for_user(self, user):
+        self.payload['user_id'] = user.id  # Associate the user by their ID
+        return self
 
 class Story(models.Model):
     id = models.AutoField(primary_key=True)
