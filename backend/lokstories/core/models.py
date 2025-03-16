@@ -49,7 +49,12 @@ class User(AbstractBaseUser):  # Inherit from AbstractBaseUser
 
 class CustomRefreshToken(RefreshToken):
     def for_user(self, user):
-        self.payload['user_id'] = user.id  # Associate the user by their ID
+        # Add user_id to the token payload
+        self.payload['user_id'] = user.id
+
+        # Add user_role to the token payload (ensure the user model has the 'role' attribute)
+        self.payload['user_role'] = user.role if hasattr(user, 'role') else None
+        
         return self
 
 class Story(models.Model):

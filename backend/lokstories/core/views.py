@@ -13,6 +13,8 @@ from django.contrib.auth.hashers import check_password
 from django.contrib.auth import authenticate
 import logging
 from rest_framework import generics
+from rest_framework.views import APIView
+
 
 from rest_framework.permissions import AllowAny
 
@@ -37,35 +39,29 @@ def register_user(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny]) 
 def login_user(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    print(request.method)
+    username = request.data.get("username")
+    password = request.data.get("password")
 
-    try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
-        return Response({"message": "Invalid credentials"}, status=400)
+    # Authenticate user
+    user = authenticate(request, username=username, password=password)
 
-    if check_password(password, user.password):
-        # Create an instance of CustomRefreshToken
-        refresh = CustomRefreshToken()
+    if user is not None:
+        # Generate token for the authenticated user
+        token = CustomRefreshToken().for_user(user)
+        
+        # Optionally, you can also return user info along with the token
+        response_data = {
+           "access": str(token.access_token),  # Access token for API calls
+            "refresh": str(token),
+            "user_id": user.id,
+            "user_role": user.role,  # Assuming user has a role field
+        }
 
-        # Now call for_user method on that instance
-        refresh = refresh.for_user(user)  # Associate the user correctly
-
-        # Get the access token from the refresh token instance
-        access_token = str(refresh.access_token)
-
-        return Response({
-            "message": "Login successful",
-            "role": user.role,
-            "access_token": access_token,
-            "refresh_token": str(refresh)
-        }, status=status.HTTP_200_OK)
+        return Response(response_data)
     else:
-        return Response({"message": "Invalid credentials"}, status=400)
+        return Response({"detail": "Invalid credentials"}, status=400)
+
 
     
 @api_view(['GET'])
@@ -78,6 +74,22 @@ def get_user_data(request):
 class StoryListView(generics.ListAPIView):
     queryset = Story.objects.all()
     serializer_class = StorySerializer
+
+class AuthorBooksView(APIView):
+    permission_classes = [IsAuthenticated]  # Only allow authenticated users to access this view
+
+    def get(self, request):
+        # Get the logged-in user
+        user = request.user  # This user is the one who is authenticated
+
+        if user.role == 'Author':  # Check if the user is an Author
+            # Fetch only the stories written by this author
+            stories = Story.objects.filter(author=user)
+            serializer = StorySerializer(stories, many=True)  # Serialize the stories
+            return Response(serializer.data)  # Return serialized data of the stories
+        else:
+            # If the user is not an Author, deny access
+            return Response({'detail': 'You do not have access to this resource'}, status=403)
 
 
 @api_view(['POST'])

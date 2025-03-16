@@ -33,12 +33,15 @@ const LoginPage = () => {
       console.log("Received data:", data);
   
       if (response.ok) {
+        // Store JWT token in localStorage
+        localStorage.setItem('token', data.access);
+  
         // Redirect based on role
-        if (data.role === 'Author') {
+        if (data.user_role === 'Author') {  // Changed from data.role to data.user_role
           navigate('/authors-homepage');
-        } else if (data.role === 'Reader') {
+        } else if (data.user_role === 'Reader') {  // Changed from data.role to data.user_role
           navigate('/readers-homepage');
-        } else if (data.role === 'admin') {
+        } else if (data.user_role === 'admin') {  // Changed from data.role to data.user_role
           navigate('/dashboard');
         }
       } else {

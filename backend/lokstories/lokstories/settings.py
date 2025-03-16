@@ -190,3 +190,5 @@ CORS_ALLOW_METHODS = [
     "DELETE",
     "OPTIONS"
 ]
+# settings.py
+AUTH_USER_MODEL = 'core.User'

@@ -1,24 +1,9 @@
-"""
-URL configuration for lokstories project.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from core import api_views 
-from core.views import register_user, login_user, get_user_data,create_story, get_user_stories, update_story, delete_story,StoryListView
+from core.views import register_user, login_user, get_user_data,create_story, get_user_stories, update_story, delete_story,StoryListView,AuthorBooksView 
 from .views import index
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 router = DefaultRouter()
@@ -35,6 +20,7 @@ urlpatterns = [
     path('login/', login_user, name='login_user'),
     path('api/user-data/', get_user_data, name='user-data'),
     path('api/', include(router.urls)),
+    path('api/author/books/', AuthorBooksView.as_view(), name='author-books'),
     path('api/stories/', StoryListView.as_view(), name='story-list'),
     path('stories/create/', create_story, name='create_story'),
     path('stories/', get_user_stories, name='get_user_stories'),
