@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import './ReadersHomePage.css';
 
@@ -47,15 +48,19 @@ const ReadersHomePage = () => {
         <div className="story-list">
           {stories.length > 0 ? (
             stories.map((story) => (
-              <div key={story.id} className="story-card">
-                <img
-                  src={`http://localhost:8000${story.cover_image}`}
-                  alt={story.title}
-                  className="story-cover"
-                />
-                <h3>{story.title}</h3>
-                <p>{story.description}</p>
-              </div>
+              <Link to={`/stories/${story.id}`} key={story.id} className="story-link">
+                <div className="story-card">
+                  <img
+                    src={`http://localhost:8000${story.cover_image}`}
+                    alt={story.title}
+                    className="story-cover"
+                  />
+                  <h3>{story.title}</h3>
+                  <p className="story-author">By: {story.author_name}</p>
+                  <p className="story-genre">Genre: {story.genre}</p>
+                  <p>{story.description}</p>
+                </div>
+              </Link>
             ))
           ) : (
             <p>No stories available.</p>

@@ -122,6 +122,15 @@ def get_user_stories(request):
     serializer = StorySerializer(stories, many=True)  # Serialize the stories
     return Response(serializer.data)  # Return serialized data in response
 
+@api_view(['GET'])
+def get_story_detail(request, pk):
+    try:
+        story = Story.objects.get(pk=pk)
+        serializer = StorySerializer(story)
+        return Response(serializer.data)
+    except Story.DoesNotExist:
+        return Response({"detail": "Story not found."}, status=404)
+
 @api_view(['PUT', 'PATCH'])
 def update_story(request, pk):
     try:

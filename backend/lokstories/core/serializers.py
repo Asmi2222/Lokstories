@@ -15,6 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
         return user
     
 class StorySerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(source='author.name', read_only=True)
     class Meta:
         model = Story
         fields = '__all__'  # or you can list specific fields here

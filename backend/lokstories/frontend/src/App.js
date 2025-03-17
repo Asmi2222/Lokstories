@@ -6,6 +6,8 @@ import RegisterPage from './pages/RegisterPage';
 import AuthorsHomepage from './pages/AuthorsHomePage'; 
 import ReadersHomePage from './pages/ReadersHomePage';
 import Dashboard from './pages/Dashboard';
+import StoryPage from './pages/StoryPage'; 
+import UploadStory from './pages/UploadStory';
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
           <Route path="/authors-homepage" element={<AuthorsHomepage />} />
           <Route path="/readers-homepage" element={<ReadersHomePage />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/stories/:id" element={<StoryPage />} />
+          <Route path="/upload-story" element={<UploadStory />} />
         </Routes>
       </div>
     </Router>
