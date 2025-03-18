@@ -85,6 +85,7 @@ body {
   gap: 1.5rem;
 }
 
+/* Book card styling */
 .book-card {
   background-color: white;
   border-radius: 12px;
@@ -93,11 +94,21 @@ body {
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .book-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(255, 123, 0, 0.15);
+  box-shadow: 0 12px 20px rgba(255, 123, 0, 0.25);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.story-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
 .book-cover {
@@ -107,19 +118,67 @@ body {
   border-bottom: 2px solid #ff7b00;
 }
 
-.book-card h3 {
+.book-info {
+  padding: 1rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.book-title {
   font-size: 1rem;
   font-weight: 600;
   color: #333;
-  padding: 0.8rem 1rem 0.4rem;
-  border-bottom: 1px solid #eee;
+  margin-bottom: 0.5rem;
 }
 
-.book-card p {
-  padding: 0.6rem 1rem 1rem;
+.book-description {
   color: #666;
   font-size: 0.8rem;
-  flex-grow: 1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+}
+
+/* Book actions */
+.book-actions {
+  display: flex;
+  padding: 0.75rem;
+  gap: 0.5rem;
+  border-top: 1px solid #eee;
+}
+
+.edit-button, .delete-button {
+  padding: 0.4rem 0;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+
+.edit-button {
+  background-color: #3498db;
+  color: white;
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+.edit-button:hover {
+  background-color: #2980b9;
+  box-shadow: 0 3px 6px rgba(52, 152, 219, 0.4);
+}
+
+.delete-button {
+  background-color: #e74c3c;
+  color: white;
+  box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
+}
+
+.delete-button:hover {
+  background-color: #c0392b;
+  box-shadow: 0 3px 6px rgba(231, 76, 60, 0.4);
 }
 
 /* Header styling */
@@ -180,12 +239,8 @@ body {
   }
   
   .book-list {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 1.2rem;
-  }
-  
-  .book-cover {
-    height: 160px;
   }
 }
 
@@ -201,7 +256,28 @@ body {
   }
   
   .book-list {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 1rem;
+  }
+  
+  .book-info {
+    padding: 0.75rem;
+  }
+  
+  .book-title {
+    font-size: 0.9rem;
+  }
+  
+  .book-description {
+    font-size: 0.75rem;
+  }
+  
+  .book-actions {
+    padding: 0.5rem;
+  }
+  
+  .edit-button, .delete-button {
+    font-size: 0.75rem;
+    padding: 0.3rem 0;
   }
 }

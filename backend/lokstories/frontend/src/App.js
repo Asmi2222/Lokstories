@@ -8,6 +8,7 @@ import ReadersHomePage from './pages/ReadersHomePage';
 import Dashboard from './pages/Dashboard';
 import StoryPage from './pages/StoryPage'; 
 import UploadStory from './pages/UploadStory';
+import EditStory from './pages/EditStory';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/stories/:id" element={<StoryPage />} />
           <Route path="/upload-story" element={<UploadStory />} />
+          <Route path="/edit-story/:id" element={<EditStory />} />
         </Routes>
       </div>
     </Router>
