@@ -66,6 +66,17 @@ class Story(models.Model):
     description = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
+   # Historic site fields
+    historic_site_name = models.CharField(max_length=255, null=True, blank=True)
+    historic_site_description = models.TextField(null=True, blank=True)
+    historic_site_url = models.URLField(max_length=500, null=True, blank=True)
+    
+    # Food location fields
+    food_name = models.CharField(max_length=255, null=True, blank=True)
+    restaurant_name = models.CharField(max_length=255, null=True, blank=True)
+    food_description = models.TextField(null=True, blank=True)
+    restaurant_url = models.URLField(max_length=500, null=True, blank=True)
+
     def __str__(self):
         return self.title
 
