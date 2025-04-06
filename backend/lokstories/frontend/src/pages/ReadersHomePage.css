@@ -195,3 +195,42 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
 }
+/* Add these to your existing CSS */
+.search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-bar input {
+  padding: 8px 12px 8px 32px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  width: 250px;
+  transition: all 0.3s;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  color: #888;
+}
+
+.search-loading {
+  position: absolute;
+  right: 10px;
+  color: #888;
+  font-size: 0.8rem;
+}
+
+.search-results-info {
+  margin: 10px 0;
+  color: #666;
+  font-style: italic;
+}

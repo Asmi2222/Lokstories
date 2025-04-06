@@ -5,19 +5,40 @@ import './ReadersHomePage.css';
 
 const ReadersHomePage = () => {
   const [stories, setStories] = useState([]);
+  const [filteredStories, setFilteredStories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState(null);
 
   useEffect(() => {
     // Fetch the list of stories when the component mounts
     axios.get('http://localhost:8000/api/stories/')  
       .then(response => {
-        setStories(response.data);  
+        setStories(response.data);
+        setFilteredStories(response.data); // Initialize filtered stories
       })
       .catch(err => {
         setError('Failed to fetch stories');
         console.error(err);
       });
   }, []);  
+
+  const handleSearch = () => {
+    if (searchQuery.trim() === '') {
+      setFilteredStories(stories);
+    } else {
+      const filtered = stories.filter(story => 
+        story.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        story.author_name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredStories(filtered);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
 
   if (error) {
     return <div className="error-message">{error}</div>;
@@ -35,8 +56,18 @@ const ReadersHomePage = () => {
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
             </span>
-            <input type="text" placeholder="Search stories" />
+            <input 
+              type="text" 
+              placeholder="Search stories or authors" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
+            />
+            <button className="search-button" onClick={handleSearch}>
+              Search
+            </button>
           </div>
+          <Link to="/profile" className="profile-link">My Profile</Link>
           <div className="user-avatar">
             <img src="/api/placeholder/36/36" alt="User" />
           </div>
@@ -46,12 +77,12 @@ const ReadersHomePage = () => {
       <div className="readers-homepage">
         <h1>Explore Books</h1>
         <div className="story-list">
-          {stories.length > 0 ? (
-            stories.map((story) => (
+          {filteredStories.length > 0 ? (
+            filteredStories.map((story) => (
               <Link to={`/stories/${story.id}`} key={story.id} className="story-link">
                 <div className="story-card">
                   <img
-                    src={`http://localhost:8000${story.cover_image}`}
+                    src={story.cover_image}
                     alt={story.title}
                     className="story-cover"
                   />
@@ -63,7 +94,7 @@ const ReadersHomePage = () => {
               </Link>
             ))
           ) : (
-            <p>No stories available.</p>
+            <p>{searchQuery ? 'No matching stories found' : 'No stories available'}</p>
           )}
         </div>
       </div>

@@ -132,7 +132,8 @@ USE_I18N = True
 
 USE_TZ = True
 
-
+MEDIA_URL = '/story_covers/'
+MEDIA_ROOT = BASE_DIR / 'story_covers'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 

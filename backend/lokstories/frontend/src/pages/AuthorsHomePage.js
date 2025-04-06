@@ -70,7 +70,9 @@ const AuthorsHomePage = () => {
       <header className="site-header">
         <div className="site-logo">LOKSTORIES</div>
         <div className="user-nav">
+          <Link to="/profile" className="profile-link">My Profile</Link>
           <div className="user-avatar">
+            
             <img src="/api/placeholder/36/36" alt="User" />
           </div>
         </div>

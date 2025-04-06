@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './UploadStory.css';
@@ -11,11 +11,9 @@ const UploadStory = () => {
     description: '',
     genre: '',
     cover_image: null,
-    // Added historic site fields
     historic_site_name: '',
     historic_site_description: '',
     historic_site_url: '',
-    // Added food location fields
     food_name: '',
     restaurant_name: '',
     food_description: '',
@@ -26,6 +24,10 @@ const UploadStory = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [showHistoricSiteFields, setShowHistoricSiteFields] = useState(false);
   const [showFoodFields, setShowFoodFields] = useState(false);
+  const [genres] = useState([
+    'Fantasy', 'Science Fiction', 'Mystery', 'Romance', 'Thriller', 
+    'Adventure', 'Historical Fiction', 'Horror', 'Literary Fiction', 'Other'
+  ]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,7 +45,6 @@ const UploadStory = () => {
         cover_image: file
       });
       
-      // Create preview
       const reader = new FileReader();
       reader.onload = () => {
         setImagePreview(reader.result);
@@ -64,7 +65,6 @@ const UploadStory = () => {
       return;
     }
 
-    // Create FormData object to handle file uploads
     const data = new FormData();
     
     // Required fields
@@ -74,61 +74,41 @@ const UploadStory = () => {
     data.append('genre', formData.genre);
     if (formData.cover_image) {
       data.append('cover_image', formData.cover_image);
-    
     }
-    console.log('Form data being sent:');
-    console.log('historic_site_name:', formData.historic_site_name);
-    console.log('historic_site_description:', formData.historic_site_description);
-    console.log('historic_site_url:', formData.historic_site_url);
-    console.log('food_name:', formData.food_name);
-    console.log('restaurant_name:', formData.restaurant_name);
-    console.log('food_description:', formData.food_description);
-    console.log('restaurant_url:', formData.restaurant_url);
 
-
-
-    // Append historic site fields - even if empty to match model structure
+    // Append historic site fields
     data.append('historic_site_name', formData.historic_site_name || '');
     data.append('historic_site_description', formData.historic_site_description || '');
     data.append('historic_site_url', formData.historic_site_url || '');
 
-    // Append food location fields - even if empty to match model structure
+    // Append food location fields
     data.append('food_name', formData.food_name || '');
     data.append('restaurant_name', formData.restaurant_name || '');
     data.append('food_description', formData.food_description || '');
     data.append('restaurant_url', formData.restaurant_url || '');
 
-    console.log('Sending data to server:', Object.fromEntries(data.entries()));
-
     try {
-      // Add timeout and better error handling
       const response = await axios.post('http://localhost:8000/stories/create/', data, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         },
-        timeout: 15000 // 15 seconds timeout
+        timeout: 15000
       });
       
-      console.log('Server response:', response.data);
       setLoading(false);
-      // Redirect to author's home page after successful upload
       navigate('/authors-homepage');
     } catch (err) {
       setLoading(false);
-      console.error('Full error:', err);
       
       if (err.code === 'ECONNABORTED') {
         setError('Request timed out. Server may be down or overloaded.');
       } else if (!err.response) {
         setError('Network error. Check your connection and server status.');
       } else {
-        // Try to get more detailed error info
         const errorData = err.response?.data;
-        console.log('Error response data:', errorData);
         
         if (typeof errorData === 'object') {
-          // If error data is an object, extract field errors
           const fieldErrors = Object.entries(errorData)
             .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
             .join('; ');
@@ -145,15 +125,11 @@ const UploadStory = () => {
     navigate('/authors-homepage');
   };
 
-  // Test connection to server before rendering
-  React.useEffect(() => {
+  useEffect(() => {
     const testConnection = async () => {
       try {
-        // Try a simple GET request to see if server is available
         await axios.get('http://localhost:8000/', { timeout: 5000 });
-        console.log('Server connection test: SUCCESS');
       } catch (err) {
-        console.error('Server connection test: FAILED', err);
         if (!err.response) {
           setError('Warning: Could not connect to server. Server may be down or unavailable.');
         }
@@ -167,11 +143,6 @@ const UploadStory = () => {
     <>
       <header className="site-header">
         <div className="site-logo">LOKSTORIES</div>
-        <div className="user-nav">
-          <div className="user-avatar">
-            <img src="/api/placeholder/36/36" alt="User" />
-          </div>
-        </div>
       </header>
       
       <div className="upload-story-container">
@@ -190,6 +161,7 @@ const UploadStory = () => {
               name="title"
               value={formData.title}
               onChange={handleChange}
+              placeholder="Enter your story title"
               required
             />
           </div>
@@ -202,7 +174,7 @@ const UploadStory = () => {
               name="genre"
               value={formData.genre}
               onChange={handleChange}
-              placeholder="e.g. Fantasy, Mystery, Romance"
+              placeholder="Enter a genre"
               required
             />
           </div>
@@ -214,6 +186,7 @@ const UploadStory = () => {
               name="description"
               value={formData.description}
               onChange={handleChange}
+              placeholder="Briefly describe your story (will appear in previews)"
               rows="3"
               required
             ></textarea>
@@ -226,6 +199,7 @@ const UploadStory = () => {
               name="content"
               value={formData.content}
               onChange={handleChange}
+              placeholder="Write your story here..."
               rows="10"
               required
             ></textarea>
@@ -233,17 +207,33 @@ const UploadStory = () => {
           
           <div className="form-group">
             <label htmlFor="cover_image">Cover Image</label>
-            <input
-              type="file"
-              id="cover_image"
-              name="cover_image"
-              accept="image/*"
-              onChange={handleImageChange}
-            />
-            {imagePreview && (
+            {imagePreview ? (
               <div className="image-preview">
                 <img src={imagePreview} alt="Cover preview" />
+                <button 
+                  type="button" 
+                  className="cover-image-button"
+                  onClick={() => {
+                    setImagePreview(null);
+                    setFormData({...formData, cover_image: null});
+                  }}
+                >
+                  Remove Image
+                </button>
               </div>
+            ) : (
+              <>
+                <input
+                  type="file"
+                  id="cover_image"
+                  name="cover_image"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+                <label htmlFor="cover_image" className="cover-image-button">
+                  Choose Cover Image
+                </label>
+              </>
             )}
           </div>
           
@@ -271,6 +261,7 @@ const UploadStory = () => {
                   name="historic_site_name"
                   value={formData.historic_site_name}
                   onChange={handleChange}
+                  placeholder="Name of the historic site"
                 />
               </div>
               
@@ -281,6 +272,7 @@ const UploadStory = () => {
                   name="historic_site_description"
                   value={formData.historic_site_description}
                   onChange={handleChange}
+                  placeholder="Describe the historic site and its significance"
                   rows="3"
                 ></textarea>
               </div>
@@ -323,6 +315,7 @@ const UploadStory = () => {
                   name="food_name"
                   value={formData.food_name}
                   onChange={handleChange}
+                  placeholder="Name of the dish or food"
                 />
               </div>
               
@@ -334,6 +327,7 @@ const UploadStory = () => {
                   name="restaurant_name"
                   value={formData.restaurant_name}
                   onChange={handleChange}
+                  placeholder="Name of the restaurant or eatery"
                 />
               </div>
               
@@ -344,6 +338,7 @@ const UploadStory = () => {
                   name="food_description"
                   value={formData.food_description}
                   onChange={handleChange}
+                  placeholder="Describe the food and its significance"
                   rows="3"
                 ></textarea>
               </div>

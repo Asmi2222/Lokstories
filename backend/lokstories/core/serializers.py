@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Story, Rating, Comment
 from .models import User
+from django.db import models
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,13 +17,23 @@ class UserSerializer(serializers.ModelSerializer):
     
 class StorySerializer(serializers.ModelSerializer):
     author_name = serializers.CharField(source='author.name', read_only=True)
+    avg_rating = serializers.SerializerMethodField()
+    rating_count = serializers.SerializerMethodField()
     class Meta:
         model = Story
         fields = ['id', 'author', 'author_name', 'title', 'content', 'cover_image', 
                   'genre', 'description', 'historic_site_name', 
                   'historic_site_description', 'historic_site_url',
                   'food_name', 'restaurant_name', 'food_description', 
-                  'restaurant_url']
+                  'restaurant_url','avg_rating', 'rating_count']
+        
+    def get_avg_rating(self, obj):
+        return Rating.objects.filter(story=obj).aggregate(
+            avg_rating=models.Avg('rating')
+        )['avg_rating'] or 0
+    
+    def get_rating_count(self, obj):
+        return Rating.objects.filter(story=obj).count()
 
 class RatingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,6 +41,10 @@ class RatingSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class CommentSerializer(serializers.ModelSerializer):
+    # Add username field fetched from related User model
+    username = serializers.CharField(source='user.username', read_only=True)
+    
     class Meta:
         model = Comment
-        fields = '__all__'
+        fields = ['id', 'content', 'story', 'user', 'username', 'created_at']
+        read_only_fields = ['created_at'] 

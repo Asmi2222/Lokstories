@@ -35,6 +35,7 @@ const LoginPage = () => {
       if (response.ok) {
         // Store JWT token in localStorage
         localStorage.setItem('token', data.access);
+        localStorage.setItem('user_id', data.user_id);
   
         // Redirect based on role
         if (data.user_role === 'Author') {  // Changed from data.role to data.user_role
