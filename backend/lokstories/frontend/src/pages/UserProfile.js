@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import './UserProfile.css';
 
 const UserProfile = () => {
   const [profile, setProfile] = useState({
@@ -27,19 +28,16 @@ const UserProfile = () => {
     }
     
     // Set default headers for all requests
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    }
+    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     
     // Fetch user profile data
     const fetchProfile = async () => {
       try {
-        // Use the same base URL format as in StoryPage.js
         const response = await axios.get('http://localhost:8000/api/profile/');
         
         setProfile(response.data);
         if (response.data.profile_picture) {
-          setPreviewImage(response.data.profile_picture);
+          setPreviewImage(`http://localhost:8000${response.data.profile_picture}`);
         }
         setLoading(false);
       } catch (error) {
@@ -79,7 +77,6 @@ const UserProfile = () => {
     setLoading(true);
     
     try {
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       
       // Add form fields to FormData
@@ -93,12 +90,14 @@ const UserProfile = () => {
       
       const response = await axios.put('http://localhost:8000/api/profile/update/', formData, {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
       
       setProfile(response.data);
+      if (response.data.profile_picture) {
+        setPreviewImage(`http://localhost:8000${response.data.profile_picture}`);
+      }
       setIsEditing(false);
       setLoading(false);
       toast.success('Profile updated successfully!');
@@ -109,115 +108,139 @@ const UserProfile = () => {
     }
   };
   
+  // Handle back button click
+  const handleBack = () => {
+    navigate(-1); // Navigate to the previous page in history
+  };
+  
   if (loading) {
     return (
-      <div className="container mt-5">
-        <div className="text-center">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
+      <div className="loading-spinner">
+        <div className="spinner"></div>
       </div>
     );
   }
-  
+
   return (
-    <div className="container mt-5">
-      <div className="row justify-content-center">
-        <div className="col-md-8">
-          <div className="card">
-            <div className="card-header d-flex justify-content-between align-items-center">
-              <h2>My Profile</h2>
-              {!isEditing && (
-                <button 
-                  className="btn btn-primary" 
-                  onClick={() => setIsEditing(true)}
-                >
-                  Edit Profile
-                </button>
-              )}
-            </div>
-            <div className="card-body">
-              {isEditing ? (
-                <form onSubmit={handleSubmit}>
-                 
-                    
-                  
-                  <div className="mb-3">
-                    <label htmlFor="username" className="form-label">Username</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="username"
-                      name="username"
-                      value={profile.username}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="mb-3">
-                    <label htmlFor="name" className="form-label">Full Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="name"
-                      name="name"
-                      value={profile.name}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="mb-3">
-                    <label className="form-label">Role</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={profile.role}
-                      disabled
-                    />
-                    <small className="text-muted">Role cannot be changed</small>
-                  </div>
-                  
-                  <div className="d-flex justify-content-end">
-                    <button
-                      type="button"
-                      className="btn btn-secondary me-2"
-                      onClick={() => {
-                        setIsEditing(false);
-                        setPreviewImage(profile.profile_picture);
-                        setNewImage(null);
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button type="submit" className="btn btn-success">
-                      Save Changes
-                    </button>
-                  </div>
-                </form>
+    <div className="profile-card">
+      {/* Header with gradient background and back button */}
+      <div className="profile-header">
+        <button className="back-btn" onClick={handleBack}>
+          ← Back
+        </button>
+      </div>
+      
+      <div className="profile-content-wrapper">
+        {/* Profile picture on the left with name below it */}
+        <div className="profile-info-container">
+          <div className="profile-left-section">
+            <div className="profile-picture-container">
+              {previewImage ? (
+                <img 
+                  src={previewImage} 
+                  alt="Profile" 
+                  className="profile-picture"
+                />
               ) : (
-                <div>
-                  
-                  
-                  <div className="row mb-3">
-                    <div className="col-md-3 fw-bold">Username:</div>
-                    <div className="col-md-9">{profile.username}</div>
-                  </div>
-                  
-                  <div className="row mb-3">
-                    <div className="col-md-3 fw-bold">Full Name:</div>
-                    <div className="col-md-9">{profile.name}</div>
-                  </div>
-                  
-                  <div className="row mb-3">
-                    <div className="col-md-3 fw-bold">Role:</div>
-                    <div className="col-md-9">{profile.role}</div>
-                  </div>
+                <div className="profile-initial">
+                  {profile.name ? profile.name.charAt(0).toUpperCase() : '?'}
                 </div>
               )}
+              
+              {isEditing && (
+                <button 
+                  className="upload-btn"
+                  onClick={() => document.getElementById('profile_picture').click()}
+                >
+                  Change Photo
+                </button>
+              )}
+              <input
+                type="file"
+                id="profile_picture"
+                className="hidden-input"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
             </div>
+            
+            <div className="profile-name">
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="name"
+                  className="name-input"
+                  value={profile.name}
+                  onChange={handleChange}
+                  required
+                />
+              ) : (
+                <h2>{profile.name}</h2>
+              )}
+            </div>
+          </div>
+          
+          {/* Personal Information Section below the name */}
+          <div className="profile-content">
+            <div className="profile-section-title">Personal Information</div>
+            
+            <div className="profile-field">
+              <div className="field-label">Role</div>
+              <div className="field-value">{profile.role}</div>
+            </div>
+            
+            {isEditing ? (
+              <form onSubmit={handleSubmit}>
+                <div className="profile-field">
+                  <div className="field-label">Username</div>
+                  <input
+                    type="text"
+                    name="username"
+                    className="field-input"
+                    value={profile.username}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+                
+                <div className="btn-container">
+                  <button
+                    type="button"
+                    className="cancel-btn"
+                    onClick={() => {
+                      setIsEditing(false);
+                      if (profile.profile_picture) {
+                        setPreviewImage(`http://localhost:8000${profile.profile_picture}`);
+                      } else {
+                        setPreviewImage(null);
+                      }
+                      setNewImage(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="save-btn">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <>
+                <div className="profile-field">
+                  <div className="field-label">Username</div>
+                  <div className="field-value">{profile.username}</div>
+                </div>
+                
+                <div className="btn-container">
+                  <button 
+                    className="edit-btn"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    Edit Profile
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

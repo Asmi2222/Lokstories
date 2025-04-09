@@ -14,6 +14,7 @@ import EditStory from './pages/EditStory';
 import AdminStories from './pages/AdminStories';
 import AdminUsers from './pages/AdminUsers';
 import UserProfile from './pages/UserProfile';
+import AdminComments from './pages/AdminComments';
 
 function App() {
   return (
@@ -31,7 +32,7 @@ function App() {
           <Route path="/admin/stories" element={<AdminStories />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/profile" element={<UserProfile />} />
-          
+          <Route path="/admin/comments" element={<AdminComments />} />
         </Routes>
       </div>
     </Router>

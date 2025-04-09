@@ -2,11 +2,16 @@ import React, { useState } from "react";
 import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
 
-
 const LoginPage = () => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "" // "error" or "success"
   });
 
   const navigate = useNavigate();
@@ -15,8 +20,22 @@ const LoginPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const showNotification = (message, type) => {
+    setNotification({
+      show: true,
+      message,
+      type
+    });
+
+    // Auto-dismiss notification after 4 seconds
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 4000);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
   
     try {
       const response = await fetch('http://127.0.0.1:8000/api/login/', {
@@ -29,33 +48,63 @@ const LoginPage = () => {
   
       const data = await response.json();
   
-      // Log the received data
-      console.log("Received data:", data);
-  
       if (response.ok) {
         // Store JWT token in localStorage
         localStorage.setItem('token', data.access);
         localStorage.setItem('user_id', data.user_id);
-  
-        // Redirect based on role
-        if (data.user_role === 'Author') {  // Changed from data.role to data.user_role
-          navigate('/authors-homepage');
-        } else if (data.user_role === 'Reader') {  // Changed from data.role to data.user_role
-          navigate('/readers-homepage');
-        } else if (data.user_role === 'admin') {  // Changed from data.role to data.user_role
-          navigate('/dashboard');
-        }
+        
+        showNotification("Login successful!", "success");
+        
+        // Delay redirect to show success message
+        setTimeout(() => {
+          // Redirect based on role
+          if (data.user_role === 'Author') {
+            navigate('/authors-homepage');
+          } else if (data.user_role === 'Reader') {
+            navigate('/readers-homepage');
+          } else if (data.user_role === 'admin') {
+            navigate('/dashboard');
+          }
+        }, 1000);
       } else {
-        alert(data.message); // Shows 'Invalid credentials' if incorrect
+        showNotification(data.message || "Invalid username or password", "error");
       }
     } catch (error) {
       console.error("Error during login:", error);
+      showNotification("Connection error. Please try again later.", "error");
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
     <div className="login-container">
+      {notification.show && (
+        <div className={`notification ${notification.type}`}>
+          <div className="notification-content">
+            {notification.type === "error" ? (
+              <svg className="notification-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                <path d="M15 9L9 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="M9 9L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg className="notification-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                <path d="M8 12L11 15L16 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+            <span>{notification.message}</span>
+            <button 
+              className="notification-close"
+              onClick={() => setNotification(prev => ({ ...prev, show: false }))}
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div className="login-card">
         <form className="login-form" onSubmit={handleSubmit}>
           <h1 className="login-heading">Welcome Back</h1>
@@ -99,8 +148,16 @@ const LoginPage = () => {
             </div>
           </div>
           
-          <button type="submit" className="login-button">
-            Sign In
+          <button 
+            type="submit" 
+            className={`login-button ${loading ? 'loading' : ''}`}
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="spinner"></span>
+            ) : (
+              "Sign In"
+            )}
           </button>
           
           <div className="signup-link">

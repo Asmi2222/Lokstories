@@ -3,6 +3,69 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import './UploadStory.css'; // Reuse the upload story styles
 
+// Enhanced image handling styles with orange buttons
+const coverImageStyles = {
+  coverImageSection: {
+    marginBottom: '20px',
+    border: '1px solid #e0e0e0',
+    borderRadius: '5px',
+    padding: '15px',
+    backgroundColor: '#f9f9f9'
+  },
+  imagePreview: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginTop: '10px'
+  },
+  imageActions: {
+    marginTop: '10px',
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center'
+  },
+  changeImageButton: {
+    backgroundColor: '#ff9800', // Changed to orange
+    color: 'white',
+    border: 'none',
+    padding: '8px 15px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontWeight: '500',
+    transition: 'background-color 0.3s'
+  },
+  addImageButton: {
+    backgroundColor: '#ff9800', // Changed to orange
+    color: 'white',
+    border: 'none',
+    padding: '8px 15px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontWeight: '500',
+    transition: 'background-color 0.3s'
+  },
+  noImage: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '20px 0',
+    color: '#7f8c8d'
+  },
+  fileInputContainer: {
+    marginTop: '15px',
+    padding: '10px',
+    border: '1px dashed #bdc3c7',
+    borderRadius: '4px',
+    backgroundColor: '#ecf0f1'
+  },
+  fileHelpText: {
+    fontSize: '14px',
+    color: '#7f8c8d',
+    marginTop: '5px',
+    textAlign: 'center'
+  }
+};
+
 const EditStory = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -12,11 +75,9 @@ const EditStory = () => {
     description: '',
     genre: '',
     cover_image: null,
-    // Added historic site fields
     historic_site_name: '',
     historic_site_description: '',
     historic_site_url: '',
-    // Added food location fields
     food_name: '',
     restaurant_name: '',
     food_description: '',
@@ -28,6 +89,7 @@ const EditStory = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [showHistoricSiteFields, setShowHistoricSiteFields] = useState(false);
   const [showFoodFields, setShowFoodFields] = useState(false);
+  const [showImageInput, setShowImageInput] = useState(false);
 
   useEffect(() => {
     const fetchStory = async () => {
@@ -50,7 +112,6 @@ const EditStory = () => {
           content: response.data.content,
           description: response.data.description,
           genre: response.data.genre,
-          // We don't set cover_image here because it's a file
           historic_site_name: response.data.historic_site_name || '',
           historic_site_description: response.data.historic_site_description || '',
           historic_site_url: response.data.historic_site_url || '',
@@ -78,8 +139,13 @@ const EditStory = () => {
           setShowFoodFields(true);
         }
         
+        // Fix the image preview URL
         if (response.data.cover_image) {
-          setImagePreview(`http://localhost:8000${response.data.cover_image}`);
+          // Properly handle image URL
+          const imageUrl = response.data.cover_image.startsWith('http') 
+            ? response.data.cover_image 
+            : `http://localhost:8000${response.data.cover_image}`;
+          setImagePreview(imageUrl);
         }
         
         setLoading(false);
@@ -115,6 +181,29 @@ const EditStory = () => {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
+      
+      // Hide the file input after selecting a file
+      setShowImageInput(false);
+    }
+  };
+
+  const toggleImageInput = () => {
+    setShowImageInput(!showImageInput);
+    
+    // Focus on the file input when it becomes visible
+    if (!showImageInput) {
+      setTimeout(() => {
+        const fileInput = document.getElementById('cover_image');
+        if (fileInput) {
+          fileInput.focus();
+          // Try to simulate a click (some browsers might block this for security)
+          try {
+            fileInput.click();
+          } catch (e) {
+            console.log('Auto-click on file input was blocked');
+          }
+        }
+      }, 100);
     }
   };
 
@@ -142,12 +231,10 @@ const EditStory = () => {
       data.append('cover_image', formData.cover_image);
     }
 
-    // Append historic site fields - even if empty to match model structure
+    // Append other fields
     data.append('historic_site_name', formData.historic_site_name || '');
     data.append('historic_site_description', formData.historic_site_description || '');
     data.append('historic_site_url', formData.historic_site_url || '');
-
-    // Append food location fields - even if empty to match model structure
     data.append('food_name', formData.food_name || '');
     data.append('restaurant_name', formData.restaurant_name || '');
     data.append('food_description', formData.food_description || '');
@@ -156,7 +243,8 @@ const EditStory = () => {
     console.log('Sending data to server:', Object.fromEntries(data.entries()));
 
     try {
-      // Add timeout and better error handling
+      // IMPORTANT: Use the correct endpoint URL
+      // Try the first endpoint format
       await axios.put(`http://localhost:8000/stories/update/${id}/`, data, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -166,31 +254,47 @@ const EditStory = () => {
       });
       
       setSubmitting(false);
-      // Redirect to author's home page after successful update
       navigate('/authors-homepage');
-    } catch (err) {
-      setSubmitting(false);
-      console.error('Full error:', err);
-      
-      if (err.code === 'ECONNABORTED') {
-        setError('Request timed out. Server may be down or overloaded.');
-      } else if (!err.response) {
-        setError('Network error. Check your connection and server status.');
-      } else {
-        // Try to get more detailed error info
-        const errorData = err.response?.data;
-        console.log('Error response data:', errorData);
+    } catch (firstErr) {
+      // If the first endpoint fails, try the second format
+      try {
+        await axios.put(`http://localhost:8000/api/stories/${id}/update/`, data, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          },
+          timeout: 15000
+        });
         
-        if (typeof errorData === 'object') {
-          // If error data is an object, extract field errors
-          const fieldErrors = Object.entries(errorData)
-            .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
-            .join('; ');
-          
-          setError(fieldErrors || 'Unknown server error. Please try again.');
-        } else {
-          setError(err.response?.data?.detail || 'Failed to update story. Please try again.');
-        }
+        setSubmitting(false);
+        navigate('/authors-homepage');
+      } catch (err) {
+        handleSubmitError(err);
+      }
+    }
+  };
+
+  const handleSubmitError = (err) => {
+    setSubmitting(false);
+    console.error('Full error:', err);
+    
+    if (err.code === 'ECONNABORTED') {
+      setError('Request timed out. Server may be down or overloaded.');
+    } else if (!err.response) {
+      setError('Network error. Check your connection and server status.');
+    } else {
+      // Try to get more detailed error info
+      const errorData = err.response?.data;
+      console.log('Error response data:', errorData);
+      
+      if (typeof errorData === 'object') {
+        const fieldErrors = Object.entries(errorData)
+          .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+          .join('; ');
+        
+        setError(fieldErrors || 'Unknown server error. Please try again.');
+      } else {
+        setError(err.response?.data?.detail || 'Failed to update story. Please try again.');
       }
     }
   };
@@ -206,9 +310,7 @@ const EditStory = () => {
       <header className="site-header">
         <div className="site-logo">LOKSTORIES</div>
         <div className="user-nav">
-          <div className="user-avatar">
-            <img src="/api/placeholder/36/36" alt="User" />
-          </div>
+          
         </div>
       </header>
       
@@ -269,19 +371,64 @@ const EditStory = () => {
             ></textarea>
           </div>
           
-          <div className="form-group">
-            <label htmlFor="cover_image">Cover Image</label>
-            <input
-              type="file"
-              id="cover_image"
-              name="cover_image"
-              accept="image/*"
-              onChange={handleImageChange}
-            />
-            {imagePreview && (
-              <div className="image-preview">
-                <img src={imagePreview} alt="Cover preview" />
-                <p>Current cover image (leave empty to keep this image)</p>
+          {/* Enhanced Cover Image Section with Orange Buttons */}
+          <div className="form-group" style={coverImageStyles.coverImageSection}>
+            <label>Cover Image</label>
+            
+            {imagePreview ? (
+              <div style={coverImageStyles.imagePreview}>
+                <img 
+                  src={imagePreview} 
+                  alt="Cover preview" 
+                  style={{ 
+                    maxWidth: '100%', 
+                    maxHeight: '300px', 
+                    objectFit: 'contain',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    padding: '5px'
+                  }} 
+                />
+                <div style={coverImageStyles.imageActions}>
+                  <button 
+                    type="button" 
+                    style={coverImageStyles.changeImageButton}
+                    onClick={toggleImageInput}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e67e22'} // Darker orange on hover
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ff9800'} // Back to normal orange
+                  >
+                    {showImageInput ? 'Cancel' : 'Change Cover Image'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={coverImageStyles.noImage}>
+                <p>No cover image available</p>
+                <button 
+                  type="button" 
+                  style={coverImageStyles.addImageButton}
+                  onClick={toggleImageInput}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e67e22'} // Darker orange on hover
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ff9800'} // Back to normal orange
+                >
+                  Add Cover Image
+                </button>
+              </div>
+            )}
+            
+            {showImageInput && (
+              <div style={coverImageStyles.fileInputContainer}>
+                <input
+                  type="file"
+                  id="cover_image"
+                  name="cover_image"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  style={{ width: '100%' }}
+                />
+                <p style={coverImageStyles.fileHelpText}>
+                  Select a new image to replace the current cover
+                </p>
               </div>
             )}
           </div>

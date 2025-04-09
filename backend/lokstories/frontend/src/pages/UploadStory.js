@@ -24,6 +24,7 @@ const UploadStory = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [showHistoricSiteFields, setShowHistoricSiteFields] = useState(false);
   const [showFoodFields, setShowFoodFields] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [genres] = useState([
     'Fantasy', 'Science Fiction', 'Mystery', 'Romance', 'Thriller', 
     'Adventure', 'Historical Fiction', 'Horror', 'Literary Fiction', 'Other'
@@ -53,8 +54,23 @@ const UploadStory = () => {
     }
   };
 
+  const validateForm = () => {
+    // Check if cover image is provided
+    if (!formData.cover_image) {
+      setShowModal(true);
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      return;
+    }
+    
     setLoading(true);
     setError(null);
 
@@ -124,6 +140,14 @@ const UploadStory = () => {
   const handleCancel = () => {
     navigate('/authors-homepage');
   };
+  
+  const handleGoBack = () => {
+    navigate('/authors-homepage');
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+  };
 
   useEffect(() => {
     const testConnection = async () => {
@@ -142,6 +166,9 @@ const UploadStory = () => {
   return (
     <>
       <header className="site-header">
+        <button className="back-button" onClick={handleGoBack}>
+          ←
+        </button>
         <div className="site-logo">LOKSTORIES</div>
       </header>
       
@@ -375,6 +402,30 @@ const UploadStory = () => {
           </div>
         </form>
       </div>
+      
+      {/* Modal Popup for Cover Image */}
+      {showModal && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#E53E3E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 8V12" stroke="#E53E3E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 16H12.01" stroke="#E53E3E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Missing Cover Image
+            </div>
+            <div className="modal-body">
+              Please upload a cover image for your story. A cover image helps attract readers and makes your story stand out.
+            </div>
+            <div className="modal-actions">
+              <button className="modal-button" onClick={closeModal}>
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

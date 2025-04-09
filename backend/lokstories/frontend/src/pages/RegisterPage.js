@@ -1,29 +1,67 @@
 import React, { useState } from 'react';
-import axios from 'axios'; // Import axios for making API requests
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirecting after registration
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import './RegisterPage.css';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     name: "",
     username: "",
-    role: "Reader", // Set default role to "reader"
+    role: "Reader",
     password: "",
     confirmPassword: ""
   });
 
-  const navigate = useNavigate(); // Initialize useNavigate hook
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "error" // error or success
+  });
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    
+    // Clear notification when user starts typing again
+    if (notification.show) {
+      setNotification({ ...notification, show: false });
+    }
+  };
+
+  const showNotification = (message, type = "error") => {
+    setNotification({
+      show: true,
+      message,
+      type
+    });
+    
+    // Auto-hide notification after 4 seconds
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 4000);
+  };
+
+  const validateForm = () => {
+    // Check if passwords match
+    if (formData.password !== formData.confirmPassword) {
+      showNotification("Passwords do not match!");
+      return false;
+    }
+    
+    // Basic password strength validation
+    if (formData.password.length < 8) {
+      showNotification("Password must be at least 8 characters long");
+      return false;
+    }
+    
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if passwords match
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+    if (!validateForm()) {
       return;
     }
 
@@ -31,17 +69,57 @@ const RegisterPage = () => {
       const response = await axios.post('http://127.0.0.1:8000/api/register/', formData);
       
       if (response.status === 201) {
-        // Redirect to login page after successful registration
-        navigate('/');
+        showNotification("Registration successful!", "success");
+        
+        // Redirect after a short delay to show the success message
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
       }
     } catch (error) {
       console.error("Error during registration:", error);
-      alert("Registration failed. Please try again.");
+      
+      // Check for specific error responses
+      if (error.response && error.response.data) {
+        if (error.response.data.username) {
+          showNotification("Username already taken. Please choose another username.");
+        } else {
+          showNotification("Registration failed. Please try again.");
+        }
+      } else {
+        showNotification("Registration failed. Please try again.");
+      }
     }
   };
 
   return (
     <div className="login-container">
+      {notification.show && (
+        <div className={`notification ${notification.type}`}>
+          <div className="notification-content">
+            {notification.type === "error" ? (
+              <svg className="notification-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                <path d="M15 9L9 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="M9 9L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            ) : (
+              <svg className="notification-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                <path d="M8 12L11 15L16 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+            <span>{notification.message}</span>
+            <button 
+              className="notification-close"
+              onClick={() => setNotification(prev => ({ ...prev, show: false }))}
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div className="login-card">
         <form className="login-form" onSubmit={handleSubmit}>
           <h1 className="login-heading">Create Account</h1>

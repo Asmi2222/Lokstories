@@ -407,3 +407,55 @@ def update_user_profile(request):
         return Response(serializer.data)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def logout_user(request):
+    try:
+        refresh_token = request.data.get('refresh')
+        if refresh_token:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"detail": "Successfully logged out."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_comments_list(request):
+    """API endpoint to get all comments for admin"""
+    # Check if user is admin
+    if request.user.role != 'admin':
+        return Response({"detail": "You do not have permission to access this data."}, 
+                        status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        comments = Comment.objects.all().order_by('-created_at')
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        logger.error(f"Error in admin_comments_list: {str(e)}")
+        return Response({"detail": "An error occurred while fetching comments."},
+                       status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def admin_delete_comment(request, pk):
+    """API endpoint for admin to delete a comment"""
+    # Check if user is admin
+    if request.user.role != 'admin':
+        return Response({"detail": "You do not have permission to delete comments."}, 
+                        status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        comment = Comment.objects.get(pk=pk)
+        comment.delete()
+        return Response({"detail": "Comment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+    except Comment.DoesNotExist:
+        return Response({"detail": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.error(f"Error in admin_delete_comment: {str(e)}")
+        return Response({"detail": "An error occurred while deleting the comment."},
+                       status=status.HTTP_500_INTERNAL_SERVER_ERROR)    

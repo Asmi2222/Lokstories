@@ -6,10 +6,14 @@ import './AuthorsHomePage.css';
 const AuthorsHomePage = () => {
   const [books, setBooks] = useState([]);
   const [error, setError] = useState(null);
+  const [profile, setProfile] = useState({
+    profile_picture: null
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchBooks();
+    fetchProfile();
   }, []);
 
   const fetchBooks = () => {
@@ -33,8 +37,30 @@ const AuthorsHomePage = () => {
     }
   };
 
+  const fetchProfile = () => {
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+      axios.get('http://localhost:8000/api/profile/', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        setProfile(response.data);
+      })
+      .catch(err => {
+        console.error('Error fetching profile:', err);
+      });
+    }
+  };
+
   const handleUploadClick = () => {
     navigate('/upload-story');
+  };
+
+  const handleBackClick = () => {
+    navigate(-1);
   };
 
   const handleEditClick = (bookId) => {
@@ -42,23 +68,65 @@ const AuthorsHomePage = () => {
   };
 
   const handleDeleteClick = async (bookId) => {
-    if (window.confirm('Are you sure you want to delete this story? This action cannot be undone.')) {
+    // Using the custom confirmation dialog instead of window.confirm
+    const confirmDialog = document.getElementById('confirm-dialog');
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    const cancelDeleteBtn = document.getElementById('cancel-delete');
+    const currentBookId = document.getElementById('current-book-id');
+    
+    // Set the book ID to a data attribute to access it when confirming
+    currentBookId.value = bookId;
+    
+    // Show the dialog
+    confirmDialog.classList.remove('hidden');
+    
+    // Handle delete confirmation
+    const confirmDeleteHandler = async () => {
       const token = localStorage.getItem('token');
+      const bookToDelete = currentBookId.value;
       
       try {
-        await axios.delete(`http://localhost:8000/stories/delete/${bookId}/`, {
+        await axios.delete(`http://localhost:8000/stories/delete/${bookToDelete}/`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         
         // Remove the deleted book from the state
-        setBooks(books.filter(book => book.id !== bookId));
+        setBooks(books.filter(book => book.id !== parseInt(bookToDelete)));
+        
+        // Hide the dialog
+        confirmDialog.classList.add('hidden');
+        
+        // Clean up event listeners
+        confirmDeleteBtn.removeEventListener('click', confirmDeleteHandler);
+        cancelDeleteBtn.removeEventListener('click', cancelDeleteHandler);
       } catch (err) {
         setError('Failed to delete the story');
         console.error(err);
+        confirmDialog.classList.add('hidden');
       }
-    }
+    };
+    
+    // Handle cancel deletion
+    const cancelDeleteHandler = () => {
+      confirmDialog.classList.add('hidden');
+      
+      // Clean up event listeners
+      confirmDeleteBtn.removeEventListener('click', confirmDeleteHandler);
+      cancelDeleteBtn.removeEventListener('click', cancelDeleteHandler);
+    };
+    
+    // Add event listeners
+    confirmDeleteBtn.addEventListener('click', confirmDeleteHandler);
+    cancelDeleteBtn.addEventListener('click', cancelDeleteHandler);
+  };
+
+  const handleLogout = () => {
+    // Remove the token from localStorage
+    localStorage.removeItem('token');
+    // Redirect to login page
+    navigate('/');
   };
 
   if (error) {
@@ -68,29 +136,54 @@ const AuthorsHomePage = () => {
   return (
     <>
       <header className="site-header">
-        <div className="site-logo">LOKSTORIES</div>
+        <div className="header-left">
+          <button onClick={handleBackClick} className="back-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <div className="site-logo">LOKSTORIES</div>
+        </div>
         <div className="user-nav">
-          <Link to="/profile" className="profile-link">My Profile</Link>
-          <div className="user-avatar">
-            
-            <img src="/api/placeholder/36/36" alt="User" />
-          </div>
+          <button onClick={handleLogout} className="logout-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Logout</span>
+          </button>
+          <Link to="/profile" className="profile-link">
+            {profile.profile_picture ? (
+              <img 
+                src={`http://localhost:8000${profile.profile_picture}`} 
+                alt="Profile" 
+                className="user-avatar" 
+              />
+            ) : (
+              <div className="user-avatar-placeholder">
+                {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
+              </div>
+            )}
+          </Link>
         </div>
       </header>
 
       <div className="authors-homepage">
         <div className="page-header">
           <h1>My Books</h1>
-          <button className="upload-button" onClick={handleUploadClick}>
-            <span className="upload-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
-            </span>
-            Upload Story
-          </button>
+          <div className="upload-button-container">
+            <button className="upload-button" onClick={handleUploadClick}>
+              <span className="upload-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </span>
+              Upload Story
+            </button>
+          </div>
         </div>
 
         <div className="book-list">
@@ -127,6 +220,24 @@ const AuthorsHomePage = () => {
           ) : (
             <p>No books available. Start writing your first story!</p>
           )}
+        </div>
+      </div>
+
+      {/* Custom Confirmation Dialog */}
+      <div id="confirm-dialog" className="confirm-dialog-overlay hidden">
+        <div className="confirm-dialog">
+          <div className="confirm-dialog-header">
+            <h3>Confirm Deletion</h3>
+          </div>
+          <div className="confirm-dialog-content">
+            <p>Are you sure you want to delete this story?</p>
+            <p className="warning-text">This action cannot be undone!</p>
+          </div>
+          <input type="hidden" id="current-book-id" />
+          <div className="confirm-dialog-actions">
+            <button id="cancel-delete" className="cancel-dialog-btn">Cancel</button>
+            <button id="confirm-delete" className="confirm-dialog-btn">Delete</button>
+          </div>
         </div>
       </div>
     </>

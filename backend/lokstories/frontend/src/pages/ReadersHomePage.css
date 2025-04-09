@@ -119,6 +119,21 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0.3rem;
+}
+
 .site-logo {
   font-size: 1.4rem;
   font-weight: 700;
@@ -126,13 +141,19 @@ body {
   letter-spacing: 0.5px;
 }
 
-.search-bar {
-  position: relative;
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-right: 0.8rem;
 }
 
+.search-bar {
+  position: relative;
+}
+
 .search-bar input {
-  width: 200px;
+  width: 220px;
   padding: 0.4rem 0.8rem 0.4rem 2rem;
   border: none;
   border-radius: 20px;
@@ -145,6 +166,7 @@ body {
   outline: none;
   border: 1px solid #ff7b00;
   box-shadow: 0 0 0 1px rgba(255, 123, 0, 0.1);
+  width: 250px;
 }
 
 .search-icon {
@@ -160,13 +182,49 @@ body {
   height: 14px;
 }
 
+.refreshing-button {
+  background-color: #ff7b00;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.refreshing-button:hover {
+  background-color: #ff5e00;
+  transform: rotate(45deg);
+}
+
 .user-nav {
   display: flex;
   align-items: center;
   gap: 0.8rem;
 }
 
-.user-avatar {
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 20px;
+  color: white;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.user-avatar, .user-avatar-placeholder {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -176,6 +234,8 @@ body {
   align-items: center;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  color: #ff5e00;
 }
 
 .user-avatar img {
@@ -195,32 +255,6 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
 }
-/* Add these to your existing CSS */
-.search-bar {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-bar input {
-  padding: 8px 12px 8px 32px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
-  width: 250px;
-  transition: all 0.3s;
-}
-
-.search-bar input:focus {
-  outline: none;
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-}
-
-.search-icon {
-  position: absolute;
-  left: 10px;
-  color: #888;
-}
 
 .search-loading {
   position: absolute;
@@ -233,4 +267,15 @@ body {
   margin: 10px 0;
   color: #666;
   font-style: italic;
+}
+
+.story-author, .story-genre {
+  font-size: 0.75rem;
+  color: #777;
+  padding: 0 1rem;
+}
+
+.story-link {
+  text-decoration: none;
+  color: inherit;
 }
