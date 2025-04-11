@@ -95,7 +95,7 @@ const ReadersHomePage = () => {
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
           </button>
-          <div className="site-logo">LOKSTORIES</div>
+          <div className="site-logo">Lokstories</div>
         </div>
         <div className="user-nav">
           <div className="search-container">
@@ -114,7 +114,7 @@ const ReadersHomePage = () => {
                 onKeyPress={handleKeyPress}
               />
             </div>
-            <button className="refresh-button" onClick={handleRefresh} title="Refresh all books">
+            <button className="refreshing-button" onClick={handleRefresh} title="Refresh all books">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
               </svg>

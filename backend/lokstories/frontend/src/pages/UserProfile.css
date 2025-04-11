@@ -264,7 +264,7 @@
   }
   
   /* Loading animation */
-  .loading-spinner {
+  .user-loading-spinner {
     display: flex;
     justify-content: center;
     align-items: center;

@@ -408,7 +408,8 @@ const StoryPage = () => {
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
           </button>
-          <div className="app-logo">LokStories</div>
+
+          <div className="app-logo"><h3>Lokstories</h3></div>
         </div>
         <div className="translate-button-container">
           <button 
@@ -669,18 +670,19 @@ const StoryPage = () => {
                         </span>
                       </div>
                     </div>
+                    <div className='comment-delete'>
                     <div className="comment-content">{comment.content}</div>
                     <div className="comment-actions">
                       
                       {userId === comment.user && (
                         <button 
                           onClick={() => initiateDeleteComment(comment.id)}
-                          className="comment-action-btn delete-btn"
+                          className="comment-action-btn story-delete-btn"
                         >
                           Delete
                         </button>
                       )}
-                    </div>
+                    </div></div>
                   </div>
                 </div>
               ))}

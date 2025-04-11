@@ -55,9 +55,11 @@ body {
 }
 
 .app-logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  margin: 0;
+    padding-left: 10px;
+    color: white;
+    font-size: 22px;
+    margin-left: 50%;
 }
 
 /* Translation button in navbar */
@@ -109,7 +111,7 @@ body {
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Slight shadow to make it float */
-  width: 120px; /* Set a fixed width for the small box */
+  width: 220px; /* Set a fixed width for the small box */
   height: 120px; /* Set a fixed height for the small box */
   text-align: center;
 }
@@ -691,13 +693,18 @@ iframe {
 
 .comment-actions {
   display: flex;
+
   gap: 16px;
 }
-
+.comment-delete{
+  display: flex;
+  flex-direction: row;
+  justify-content:space-between;
+}
 .comment-action-btn {
-  background: none;
+  background: red;
   border: none;
-  color: #666;
+  color: #ffffff;
   cursor: pointer;
   font-size: 0.9rem;
   display: flex;
@@ -721,11 +728,11 @@ iframe {
   font-weight: 500;
 }
 
-.delete-btn {
-  color: #e74c3c;
+.story-delete-btn {
+  color: #fdfdfd;
 }
 
-.delete-btn:hover {
+.story-delete-btn:hover {
   background-color: #ffeaed;
 }
 

@@ -165,11 +165,16 @@ const UploadStory = () => {
 
   return (
     <>
+    <div className='uploadStory'>
       <header className="site-header">
-        <button className="back-button" onClick={handleGoBack}>
-          ←
-        </button>
-        <div className="site-logo">LOKSTORIES</div>
+      <div className="header-left">
+          <button onClick={handleGoBack} className="back-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <div className="site-logo ">Lokstories</div>
+        </div>
       </header>
       
       <div className="upload-story-container">
@@ -426,6 +431,7 @@ const UploadStory = () => {
           </div>
         </div>
       )}
+      </div>
     </>
   );
 };

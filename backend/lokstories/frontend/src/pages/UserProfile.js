@@ -115,7 +115,7 @@ const UserProfile = () => {
   
   if (loading) {
     return (
-      <div className="loading-spinner">
+      <div className="user-loading-spinner">
         <div className="spinner"></div>
       </div>
     );

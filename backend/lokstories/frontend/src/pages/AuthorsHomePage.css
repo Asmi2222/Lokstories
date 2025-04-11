@@ -207,7 +207,7 @@ body {
   background: none; /* Changed to none to ensure no background */
   border: none;
   padding: 0; /* Removed padding */
-  margin-right: 1rem;
+  margin-left: 2rem;
   cursor: pointer;
   transition: opacity 0.2s ease;
   width: auto; /* Remove fixed width */
@@ -227,10 +227,12 @@ body {
 }
 
 .site-logo {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: white;
-  letter-spacing: 0.5px;
+
+    margin: 0;
+    padding-left: 10px;
+    color: white;
+    font-size: 22px;
+    margin-left: 50%;
 }
 
 .user-nav {

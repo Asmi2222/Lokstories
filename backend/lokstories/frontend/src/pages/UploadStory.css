@@ -45,7 +45,7 @@ body {
   font-weight: 700;
   color: white;
   letter-spacing: 1px;
-  text-transform: lowercase;
+  
 }
 
 .back-button {
@@ -135,7 +135,7 @@ body {
   font-size: 18px;
 }
 
-input[type="text"],
+.uploadStory input[type="text"],
 input[type="url"],
 textarea,
 select {

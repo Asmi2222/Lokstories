@@ -142,8 +142,8 @@ const AdminUsers = () => {
             <h1>Manage Users</h1>
           </div>
           <div className="header-actions">
-            <button onClick={handleGoBack} className="back-button">
-              <i className="fas fa-arrow-left"></i> Back
+            <button onClick={handleGoBack} className="admin-back-button">
+              <i className="fas fa-arrow-left btn"></i> Back
             </button>
             <button onClick={handleRefresh} className="refresh-button" disabled={refreshing}>
               <i className="fas fa-sync-alt"></i> {refreshing ? 'Refreshing...' : 'Refresh'}
