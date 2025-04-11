@@ -59,6 +59,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'core.middleware.cache_control_middleware',
 ]
 
     
@@ -165,6 +166,8 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': False,  # Don't blacklist old refresh tokens
     'UPDATE_LAST_LOGIN': False,  # Don't update the last login timestamp on the User model
     'AUTH_HEADER_TYPES': ('Bearer',),  # Standard 'Bearer' token type
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
 }
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [

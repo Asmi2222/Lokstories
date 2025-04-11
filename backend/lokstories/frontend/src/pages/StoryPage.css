@@ -790,7 +790,18 @@ iframe {
   }
   
   .comment-item {
-    gap: 12px;
+    display: flex;
+      gap: 16px;
+      background-color: white;
+      border: 1px solid white;
+      /* White border */
+      border-radius: 8px;
+      /* Rounded corners */
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      /* Grey shadow */
+      padding: 16px;
+      /* Add some padding inside the border */
+      transition: box-shadow 0.3s ease;
   }
 }
 
@@ -831,6 +842,10 @@ iframe {
   .comment-item {
     flex-direction: column;
     padding: 15px;
+  }
+  
+  .comment-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow on hover */
   }
   
   .comment-avatar {

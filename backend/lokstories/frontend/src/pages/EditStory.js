@@ -150,7 +150,7 @@ const EditStory = () => {
         
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch story details');
+        setError('Failed to fetch story details.');
         setLoading(false);
         console.error(err);
       }
