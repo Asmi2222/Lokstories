@@ -14,7 +14,7 @@ from rest_framework.response import Response
 class StoryViewSet(viewsets.ModelViewSet):
     queryset = Story.objects.all()
     serializer_class = StorySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    
 
 class RatingViewSet(viewsets.ModelViewSet):
     queryset = Rating.objects.all()

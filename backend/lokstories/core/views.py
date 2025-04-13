@@ -130,11 +130,34 @@ def get_user_stories(request):
     return Response(serializer.data)  # Return serialized data in response
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Require authentication
 def get_story_detail(request, pk):
     try:
         story = Story.objects.get(pk=pk)
+        
+        # Check permissions based on role
+        user = request.user
+        if user.role == 'Author' and story.author.id != user.id:
+            return Response({"detail": "You do not have permission to view this story."}, 
+                        status=status.HTTP_403_FORBIDDEN)
+        
         serializer = StorySerializer(story)
         return Response(serializer.data)
+    except Story.DoesNotExist:
+        return Response({"detail": "Story not found."}, status=404)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_edit_permission(request, story_id):
+    try:
+        story = Story.objects.get(pk=story_id)
+        user = request.user
+        
+        # Only the author or admin can edit
+        if user.role == 'admin' or (user.role == 'Author' and story.author.id == user.id):
+            return Response({"has_permission": True})
+        else:
+            return Response({"has_permission": False}, status=status.HTTP_403_FORBIDDEN)
     except Story.DoesNotExist:
         return Response({"detail": "Story not found."}, status=404)
 

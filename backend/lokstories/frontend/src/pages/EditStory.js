@@ -90,10 +90,13 @@ const EditStory = () => {
   const [showHistoricSiteFields, setShowHistoricSiteFields] = useState(false);
   const [showFoodFields, setShowFoodFields] = useState(false);
   const [showImageInput, setShowImageInput] = useState(false);
+  
 
   useEffect(() => {
     const fetchStory = async () => {
       const token = localStorage.getItem('token');
+      const currentUserId = localStorage.getItem('user_id');
+      
       if (!token) {
         setError('Authentication required. Please login again.');
         setLoading(false);
@@ -106,6 +109,13 @@ const EditStory = () => {
             'Authorization': `Bearer ${token}`
           }
         });
+        
+        // Check if the current user is the author of this story
+        if (response.data.author !== parseInt(currentUserId)) {
+          // If not the author, redirect to unauthorized page
+          navigate('/unauthorized');
+          return;
+        }
         
         setFormData({
           title: response.data.title,
@@ -157,7 +167,7 @@ const EditStory = () => {
     };
 
     fetchStory();
-  }, [id]);
+  }, [id, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

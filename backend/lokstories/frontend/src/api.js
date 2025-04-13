@@ -52,5 +52,24 @@ export const loginUser = async (username, password) => {
   }
 };
 
+// Handle authentication errors
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // Token expired or invalid
+      localStorage.removeItem('token');
+      localStorage.removeItem('user_role');
+      localStorage.removeItem('tokenExpiry');
+      
+      // Only redirect if we're not already on the login page
+      if (window.location.pathname !== '/') {
+        window.location.href = '/'; // Redirect to login page
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Export the api instance for other requests
 export default api;

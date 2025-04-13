@@ -17,6 +17,10 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [profile, setProfile] = useState({
+    profile_picture: null,
+    name: ''
+  });
 
   const fetchDashboardStats = async () => {
     try {
@@ -47,8 +51,27 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchProfile = async () => {
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+      try {
+        const response = await axios.get('http://localhost:8000/api/profile/', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        setProfile(response.data);
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      }
+    }
+  };
+
   useEffect(() => {
     fetchDashboardStats();
+    fetchProfile();
   }, []);
 
   const handleRefresh = () => {
@@ -76,8 +99,6 @@ const AdminDashboard = () => {
 
   if (loading) return <div className="loading">Loading dashboard...</div>;
   if (error) return <div className="error">{error}</div>;
-
-
 
   return (
     <div className="admin-app-container">
@@ -107,18 +128,18 @@ const AdminDashboard = () => {
               </Link>
             </li>
             <li>
-            <Link to="/admin/comments">
-              <i className="fas fa-comments"></i>
-              <span>Comments</span>
-            </Link>
-          </li>
+              <Link to="/admin/comments">
+                <i className="fas fa-comments"></i>
+                <span>Comments</span>
+              </Link>
+            </li>
           </ul>
         </nav>
       </div>
 
       {/* Main Content Area */}
       <div className="admin-main-content">
-        {/* Header with title, refresh and logout */}
+        {/* Header with title, refresh, logout and profile */}
         <header className="admin-header">
           <div className="header-title">
             <h1>Admin Dashboard</h1>
@@ -130,6 +151,19 @@ const AdminDashboard = () => {
             <button onClick={handleLogout} className="logout-button">
               <i className="fas fa-sign-out-alt"></i> Logout
             </button>
+            <Link to="/profile" className="admin-profile-link">
+              {profile.profile_picture ? (
+                <img 
+                  src={`http://localhost:8000${profile.profile_picture}`} 
+                  alt="Profile" 
+                  className="admin-user-avatar" 
+                />
+              ) : (
+                <div className="admin-user-avatar-placeholder">
+                  {profile.name ? profile.name.charAt(0).toUpperCase() : 'A'}
+                </div>
+              )}
+            </Link>
           </div>
         </header>
 

@@ -1,66 +1,77 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { isAuthenticated, getUserRole } from '../utils/auth';
 
-// Component for routes that require any authentication
+// Base Protected Route component
 export const ProtectedRoute = ({ children }) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/" />;
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    return <Navigate to="/" replace />;
   }
+  
   return children;
 };
 
-// Component for admin-only routes
+// Admin Route - requires admin role
 export const AdminRoute = ({ children }) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/" />;
+  const token = localStorage.getItem('token');
+  const userRole = localStorage.getItem('user_role');
+  
+  if (!token) {
+    return <Navigate to="/" replace />;
   }
   
-  const role = getUserRole();
-  if (role !== 'admin') {
-    return <Navigate to="/unauthorized" />;
+  if (userRole !== 'admin') {
+    return <Navigate to="/unauthorized" replace />;
   }
   
   return children;
 };
 
-// Component for author-only routes
+// Author Route - requires Author role
 export const AuthorRoute = ({ children }) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/" />;
+  const token = localStorage.getItem('token');
+  const userRole = localStorage.getItem('user_role');
+  
+  if (!token) {
+    return <Navigate to="/" replace />;
   }
   
-  const role = getUserRole();
-  if (role !== 'Author') {
-    return <Navigate to="/unauthorized" />;
+  if (userRole !== 'Author') {
+    return <Navigate to="/unauthorized" replace />;
   }
   
   return children;
 };
 
-// Component for reader-only routes
+// Reader Route - requires Reader role
 export const ReaderRoute = ({ children }) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/" />;
+  const token = localStorage.getItem('token');
+  const userRole = localStorage.getItem('user_role');
+  
+  if (!token) {
+    return <Navigate to="/" replace />;
   }
   
-  const role = getUserRole();
-  if (role !== 'Reader') {
-    return <Navigate to="/unauthorized" />;
+  if (userRole !== 'Reader') {
+    return <Navigate to="/unauthorized" replace />;
   }
   
   return children;
 };
 
+// Combined Reader or Author Route
 export const ReaderAuthorRoute = ({ children }) => {
-    if (!isAuthenticated()) {
-      return <Navigate to="/" />;
-    }
-    
-    const role = getUserRole();
-    if (role !== 'Reader' && role !== 'Author') {
-      return <Navigate to="/unauthorized" />;
-    }
-    
-    return children;
-  };
+  const token = localStorage.getItem('token');
+  const userRole = localStorage.getItem('user_role');
+  
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+  
+  if (userRole !== 'Reader' && userRole !== 'Author') {
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  return children;
+};

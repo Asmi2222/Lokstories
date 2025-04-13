@@ -63,7 +63,7 @@ const AdminUsers = () => {
       setShowDeleteConfirm(false);
       setUserToDelete(null);
     } catch (err) {
-      setError('Failed to delete user. Please try again.');
+      setError('Failed to delete user. Please try again with a differnt account.');
       setShowDeleteConfirm(false);
     }
   };

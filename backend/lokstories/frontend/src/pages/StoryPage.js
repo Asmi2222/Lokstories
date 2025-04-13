@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './StoryPage.css';
+import { getUserRole } from '../utils/auth';
+
 
 
 const StoryPage = () => {
@@ -106,6 +108,19 @@ const StoryPage = () => {
 
     fetchData();
   }, [id]);
+
+  useEffect(() => {
+    if (story) {
+      const role = getUserRole();
+      const isAuthor = role === 'Author';
+      const isStoryOwner = story.author === parseInt(localStorage.getItem('user_id'));
+      
+      // If user is author but doesn't own this story, redirect
+      if (isAuthor && !isStoryOwner) {
+        navigate('/unauthorized');
+      }
+    }
+  }, [story, navigate]); 
 
 
   useEffect(() => {

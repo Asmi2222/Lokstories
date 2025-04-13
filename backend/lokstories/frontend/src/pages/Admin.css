@@ -286,6 +286,7 @@
   align-items: center;
   padding: 15px 20px;
   border-bottom: 1px solid #eee;
+
 }
 
 .modal-header h2 {
@@ -297,7 +298,8 @@
 .close-btn {
   font-size: 24px;
   cursor: pointer;
-  color: #999;
+  color: #ee1111;
+  margin-left: auto;
 }
 
 .close-btn:hover {
@@ -306,6 +308,7 @@
 
 .modal-body {
   padding: 20px;
+
 }
 
 .story-meta {
@@ -734,4 +737,43 @@
 
 .admin-sidebar .sidebar-nav ul li a i.fa-comments {
   margin-right: 10px;
+}
+
+/* Profile avatar styles to add to your Admin.css file */
+
+.admin-profile-link {
+  display: flex;
+  align-items: center;
+  margin-left: 15px;
+}
+
+.admin-user-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.admin-user-avatar-placeholder {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff9a00 0%, #ff5e00 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  border: 2px solid white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.admin-user-avatar:hover,
+.admin-user-avatar-placeholder:hover {
+  transform: scale(1.05);
 }

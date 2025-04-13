@@ -5,7 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from core import api_views 
-from core.views import register_user, login_user, get_user_data,create_story, get_user_stories, update_story, delete_story,StoryListView,AuthorBooksView, get_story_detail, add_comment, get_story_comments,manage_comment, rate_story,get_story_rating,admin_dashboard_stats, admin_stories_list, admin_delete_story, admin_users_list, admin_delete_user,get_user_profile,update_user_profile,logout_user,admin_comments_list,admin_delete_comment
+from core.views import register_user, login_user, get_user_data,create_story, get_user_stories, update_story, delete_story,StoryListView,AuthorBooksView, get_story_detail, add_comment, get_story_comments,manage_comment, rate_story,get_story_rating,admin_dashboard_stats, admin_stories_list, admin_delete_story, admin_users_list, admin_delete_user,get_user_profile,update_user_profile,logout_user,admin_comments_list,admin_delete_comment,check_edit_permission
 from .views import index
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.urls import path
@@ -59,6 +59,8 @@ urlpatterns = [
     path('api/admin/comments/delete/<int:pk>/', admin_delete_comment, name='admin-delete-comment'),
 
     path('',index),
+
+    path('api/stories/<int:story_id>/check-edit-permission/', check_edit_permission, name='check-edit-permission'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
