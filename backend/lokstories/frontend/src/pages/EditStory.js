@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import './UploadStory.css'; // Reuse the upload story styles
+import Notification from './Notification'; // Import Notification component
 
 // Enhanced image handling styles with orange buttons
 const coverImageStyles = {
@@ -90,7 +91,11 @@ const EditStory = () => {
   const [showHistoricSiteFields, setShowHistoricSiteFields] = useState(false);
   const [showFoodFields, setShowFoodFields] = useState(false);
   const [showImageInput, setShowImageInput] = useState(false);
-  
+  const [notification, setNotification] = useState(null);
+
+  // Added file size and type validation constants
+  const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
+  const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/jpg'];
 
   useEffect(() => {
     const fetchStory = async () => {
@@ -99,6 +104,10 @@ const EditStory = () => {
       
       if (!token) {
         setError('Authentication required. Please login again.');
+        setNotification({
+          message: 'Authentication required. Please login again.',
+          type: 'error'
+        });
         setLoading(false);
         return;
       }
@@ -113,6 +122,10 @@ const EditStory = () => {
         // Check if the current user is the author of this story
         if (response.data.author !== parseInt(currentUserId)) {
           // If not the author, redirect to unauthorized page
+          setNotification({
+            message: 'You are not authorized to edit this story.',
+            type: 'error'
+          });
           navigate('/unauthorized');
           return;
         }
@@ -161,6 +174,10 @@ const EditStory = () => {
         setLoading(false);
       } catch (err) {
         setError('Failed to fetch story details.');
+        setNotification({
+          message: 'Failed to fetch story details.',
+          type: 'error'
+        });
         setLoading(false);
         console.error(err);
       }
@@ -177,9 +194,30 @@ const EditStory = () => {
     });
   };
 
+  // Updated handleImageChange with file size and type validation
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Check file type
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        setError('Please select a valid image file (JPEG, PNG, JPG).');
+        setNotification({
+          message: 'Please select a valid image file (JPEG, PNG, JPG).',
+          type: 'error'
+        });
+        return;
+      }
+      
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        setError('Cover image must be less than 2MB in size.');
+        setNotification({
+          message: 'Cover image must be less than 2MB in size.',
+          type: 'error'
+        });
+        return;
+      }
+      
       setFormData({
         ...formData,
         cover_image: file
@@ -194,6 +232,12 @@ const EditStory = () => {
       
       // Hide the file input after selecting a file
       setShowImageInput(false);
+      
+      // Show success notification for image change
+      setNotification({
+        message: 'Cover image updated. Don\'t forget to save your changes!',
+        type: 'success'
+      });
     }
   };
 
@@ -225,6 +269,10 @@ const EditStory = () => {
     const token = localStorage.getItem('token');
     if (!token) {
       setError('Authentication required. Please login again.');
+      setNotification({
+        message: 'Authentication required. Please login again.',
+        type: 'error'
+      });
       setSubmitting(false);
       return;
     }
@@ -264,7 +312,15 @@ const EditStory = () => {
       });
       
       setSubmitting(false);
-      navigate('/authors-homepage');
+      // Navigate with notification state
+      navigate('/authors-homepage', { 
+        state: { 
+          notification: {
+            message: 'Story updated successfully!',
+            type: 'success'
+          }
+        }
+      });
     } catch (firstErr) {
       // If the first endpoint fails, try the second format
       try {
@@ -277,7 +333,15 @@ const EditStory = () => {
         });
         
         setSubmitting(false);
-        navigate('/authors-homepage');
+        // Navigate with notification state
+        navigate('/authors-homepage', { 
+          state: { 
+            notification: {
+              message: 'Story updated successfully!',
+              type: 'success'
+            }
+          }
+        });
       } catch (err) {
         handleSubmitError(err);
       }
@@ -290,8 +354,16 @@ const EditStory = () => {
     
     if (err.code === 'ECONNABORTED') {
       setError('Request timed out. Server may be down or overloaded.');
+      setNotification({
+        message: 'Request timed out. Server may be down or overloaded.',
+        type: 'error'
+      });
     } else if (!err.response) {
       setError('Network error. Check your connection and server status.');
+      setNotification({
+        message: 'Network error. Check your connection and server status.',
+        type: 'error'
+      });
     } else {
       // Try to get more detailed error info
       const errorData = err.response?.data;
@@ -303,8 +375,16 @@ const EditStory = () => {
           .join('; ');
         
         setError(fieldErrors || 'Unknown server error. Please try again.');
+        setNotification({
+          message: fieldErrors || 'Unknown server error. Please try again.',
+          type: 'error'
+        });
       } else {
         setError(err.response?.data?.detail || 'Failed to update story. Please try again.');
+        setNotification({
+          message: err.response?.data?.detail || 'Failed to update story. Please try again.',
+          type: 'error'
+        });
       }
     }
   };
@@ -312,26 +392,59 @@ const EditStory = () => {
   const handleCancel = () => {
     navigate('/authors-homepage');
   };
+  
   const handleGoBack = () => {
     navigate('/authors-homepage');
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  const handleNotificationClose = () => {
+    setNotification(null);
+  };
+
+  // Server connection test 
+  useEffect(() => {
+    const testConnection = async () => {
+      try {
+        await axios.get('http://localhost:8000/', { timeout: 5000 });
+      } catch (err) {
+        if (!err.response) {
+          setError('Warning: Could not connect to server. Server may be down or unavailable.');
+          setNotification({
+            message: 'Warning: Could not connect to server. Server may be down or unavailable.',
+            type: 'warning'
+          });
+        }
+      }
+    };
+    
+    testConnection();
+  }, []);
+
+  if (loading) return <div className="loading-indicator">Loading...</div>;
 
   return (
     <>
      <div className='uploadStory'>
-     <header className="site-header">
-      <div className="header-left">
+      {notification && (
+        <Notification 
+          message={notification.message}
+          type={notification.type}
+          duration={3000}
+          onClose={handleNotificationClose}
+        />
+      )}
+      
+      <header className="site-header">
+        <div className="header-left">
           <button onClick={handleGoBack} className="back-button">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
           </button>
-          <div className="site-logo ">Lokstories</div>
+          <div className="site-logo">Lokstories</div>
         </div>
       </header>
-      
+
       <div className="upload-story-container">
         <div className="page-header">
           <h1>Edit Story</h1>
@@ -348,6 +461,7 @@ const EditStory = () => {
               name="title"
               value={formData.title}
               onChange={handleChange}
+              placeholder="Enter your story title"
               required
             />
           </div>
@@ -360,7 +474,7 @@ const EditStory = () => {
               name="genre"
               value={formData.genre}
               onChange={handleChange}
-              placeholder="e.g. Fantasy, Mystery, Romance"
+              placeholder="Enter a genre"
               required
             />
           </div>
@@ -372,6 +486,7 @@ const EditStory = () => {
               name="description"
               value={formData.description}
               onChange={handleChange}
+              placeholder="Briefly describe your story (will appear in previews)"
               rows="3"
               required
             ></textarea>
@@ -384,29 +499,22 @@ const EditStory = () => {
               name="content"
               value={formData.content}
               onChange={handleChange}
+              placeholder="Write your story here..."
               rows="10"
               required
             ></textarea>
           </div>
           
-          {/* Enhanced Cover Image Section with Orange Buttons */}
+          {/* Enhanced Cover Image Section with Orange Buttons + File Size Notification */}
           <div className="form-group" style={coverImageStyles.coverImageSection}>
-            <label>Cover Image</label>
+            <label htmlFor="cover_image">
+              Cover Image <span className="file-requirements">(Max: 2MB, Formats: JPEG, PNG)</span>
+            </label>
             
             {imagePreview ? (
               <div style={coverImageStyles.imagePreview}>
-                <img 
-                  src={imagePreview} 
-                  alt="Cover preview" 
-                  style={{ 
-                    maxWidth: '100%', 
-                    maxHeight: '300px', 
-                    objectFit: 'contain',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    padding: '5px'
-                  }} 
-                />
+                <img src={imagePreview} alt="Cover preview" style={{maxWidth: '100%', maxHeight: '300px'}} />
+                
                 <div style={coverImageStyles.imageActions}>
                   <button 
                     type="button" 
@@ -422,8 +530,8 @@ const EditStory = () => {
             ) : (
               <div style={coverImageStyles.noImage}>
                 <p>No cover image available</p>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   style={coverImageStyles.addImageButton}
                   onClick={toggleImageInput}
                   onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e67e22'} // Darker orange on hover
@@ -442,10 +550,9 @@ const EditStory = () => {
                   name="cover_image"
                   accept="image/*"
                   onChange={handleImageChange}
-                  style={{ width: '100%' }}
                 />
                 <p style={coverImageStyles.fileHelpText}>
-                  Select a new image to replace the current cover
+                  Select a new image to replace the current cover (Max: 2MB, JPEG, PNG only)
                 </p>
               </div>
             )}
@@ -475,6 +582,7 @@ const EditStory = () => {
                   name="historic_site_name"
                   value={formData.historic_site_name}
                   onChange={handleChange}
+                  placeholder="Name of the historic site"
                 />
               </div>
               
@@ -485,6 +593,7 @@ const EditStory = () => {
                   name="historic_site_description"
                   value={formData.historic_site_description}
                   onChange={handleChange}
+                  placeholder="Describe the historic site and its significance"
                   rows="3"
                 ></textarea>
               </div>
@@ -527,6 +636,7 @@ const EditStory = () => {
                   name="food_name"
                   value={formData.food_name}
                   onChange={handleChange}
+                  placeholder="Name of the dish or food"
                 />
               </div>
               
@@ -538,6 +648,7 @@ const EditStory = () => {
                   name="restaurant_name"
                   value={formData.restaurant_name}
                   onChange={handleChange}
+                  placeholder="Name of the restaurant or eatery"
                 />
               </div>
               
@@ -548,6 +659,7 @@ const EditStory = () => {
                   name="food_description"
                   value={formData.food_description}
                   onChange={handleChange}
+                  placeholder="Describe the food and its significance"
                   rows="3"
                 ></textarea>
               </div>
@@ -584,7 +696,7 @@ const EditStory = () => {
           </div>
         </form>
       </div>
-      </div>
+     </div>
     </>
   );
 };

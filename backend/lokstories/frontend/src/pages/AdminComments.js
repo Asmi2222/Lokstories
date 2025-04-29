@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Admin.css';
+import Notification from './Notification'; // Adjust the path as needed
 
 const AdminComments = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const AdminComments = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     fetchComments();
@@ -32,6 +34,9 @@ const AdminComments = () => {
       setError('Failed to load comments. Please make sure you have admin privileges.');
       setLoading(false);
       setRefreshing(false);
+      
+      // Show error notification
+      showNotification('Failed to load comments. Please make sure you have admin privileges.', 'error');
     }
   };
 
@@ -59,15 +64,30 @@ const AdminComments = () => {
       });
       setComments(comments.filter(comment => comment.id !== commentToDelete.id));
       setShowDeleteConfirm(false);
+      
+      // Show success notification
+      showNotification('Comment has been successfully deleted.', 'success');
       setCommentToDelete(null);
     } catch (err) {
       setError('Failed to delete comment. Please try again.');
       setShowDeleteConfirm(false);
+      
+      // Show error notification
+      showNotification('Failed to delete comment. Please try again.', 'error');
     }
   };
 
   const handleGoBack = () => {
     navigate(-1);
+  };
+
+  // Helper function to show notifications
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+  };
+
+  const hideNotification = () => {
+    setNotification({ ...notification, show: false });
   };
 
   // Function to format date
@@ -81,6 +101,15 @@ const AdminComments = () => {
 
   return (
     <div className="admin-app-container">
+      {/* Notification */}
+      {notification.show && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={hideNotification}
+        />
+      )}
+      
       {/* Sidebar Navigation */}
       <div className="admin-sidebar">
         <div className="logo-container">

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Admin.css';
+import Notification from './Notification';
 
 const AdminUsers = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const AdminUsers = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     fetchUsers();
@@ -34,6 +36,9 @@ const AdminUsers = () => {
       setError('Failed to load users. Please make sure you have admin privileges.');
       setLoading(false);
       setRefreshing(false);
+      
+      // Show error notification
+      showNotification('Failed to load users. Please make sure you have admin privileges.', 'error');
     }
   };
 
@@ -62,9 +67,15 @@ const AdminUsers = () => {
       setUsers(users.filter(user => user.id !== userToDelete.id));
       setShowDeleteConfirm(false);
       setUserToDelete(null);
+      
+      // Show success notification
+      showNotification(`User "${userToDelete.username}" has been successfully deleted.`, 'success');
     } catch (err) {
-      setError('Failed to delete user. Please try again with a differnt account.');
+      setError('Failed to delete user. Please try again with a different account.');
       setShowDeleteConfirm(false);
+      
+      // Show error notification
+      showNotification('Failed to delete user. Please try again with a different account.', 'error');
     }
   };
 
@@ -80,6 +91,15 @@ const AdminUsers = () => {
 
   const handleGoBack = () => {
     navigate(-1);
+  };
+
+  // Helper function to show notifications
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+  };
+
+  const hideNotification = () => {
+    setNotification({ ...notification, show: false });
   };
 
   // Function to normalize and display role
@@ -99,6 +119,15 @@ const AdminUsers = () => {
 
   return (
     <div className="admin-app-container">
+      {/* Notification */}
+      {notification.show && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={hideNotification}
+        />
+      )}
+
       {/* Sidebar Navigation */}
       <div className="admin-sidebar">
         <div className="logo-container">

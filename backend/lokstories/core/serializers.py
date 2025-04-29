@@ -22,6 +22,11 @@ class UserSerializer(serializers.ModelSerializer):
     def get_comments_count(self, obj):
         return Comment.objects.filter(user=obj).count()
     
+    def validate_profile_picture(self, value):
+        if value and value.size > (2 * 1024 * 1024):  # 2MB in bytes
+            raise serializers.ValidationError("Image size cannot exceed 2MB")
+        return value
+    
 class StorySerializer(serializers.ModelSerializer):
     author_name = serializers.CharField(source='author.name', read_only=True)
     avg_rating = serializers.SerializerMethodField()
@@ -41,6 +46,11 @@ class StorySerializer(serializers.ModelSerializer):
     
     def get_rating_count(self, obj):
         return Rating.objects.filter(story=obj).count()
+    
+    def validate_cover_image(self, value):
+        if value and value.size > (2 * 1024 * 1024):  # 2MB in bytes
+            raise serializers.ValidationError("Image size cannot exceed 2MB")
+        return value
 
 class RatingSerializer(serializers.ModelSerializer):
     class Meta:

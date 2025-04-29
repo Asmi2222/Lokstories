@@ -54,17 +54,28 @@ const LoginPage = () => {
         localStorage.setItem('user_id', data.user_id);
         localStorage.setItem('user_role', data.user_role);
         
+        // Store token expiry - assuming your backend provides this or you calculate it
+        // If backend provides expiry time in seconds from now
+        if (data.expires_in) {
+          const expiryTime = Date.now() + (data.expires_in * 1000);
+          localStorage.setItem('tokenExpiry', expiryTime.toString());
+        } else {
+          // Default expiry of 8 hours if not provided
+          const expiryTime = Date.now() + (8 * 60 * 60 * 1000);
+          localStorage.setItem('tokenExpiry', expiryTime.toString());
+        }
+        
         showNotification("Login successful!", "success");
         
         // Delay redirect to show success message
         setTimeout(() => {
           // Redirect based on role
-          if (data.user_role === 'Author') {
+          if (data.user_role === 'admin') {
+            navigate('/dashboard');
+          } else if (data.user_role === 'Author') {
             navigate('/authors-homepage');
           } else if (data.user_role === 'Reader') {
             navigate('/readers-homepage');
-          } else if (data.user_role === 'admin') {
-            navigate('/dashboard');
           }
         }, 1000);
       } else {

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './AuthorsHomePage.css';
+import Notification from './Notification'; // Import Notification component
 
 const AuthorsHomePage = () => {
   const [books, setBooks] = useState([]);
@@ -9,12 +10,25 @@ const AuthorsHomePage = () => {
   const [profile, setProfile] = useState({
     profile_picture: null
   });
+  const [notification, setNotification] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     fetchBooks();
     fetchProfile();
-  }, []);
+    
+    // Check for state passed from other components (upload or edit)
+    if (location.state?.notification) {
+      setNotification({
+        message: location.state.notification.message,
+        type: location.state.notification.type || 'success'
+      });
+      
+      // Clean up the location state
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location]);
 
   const fetchBooks = () => {
     const token = localStorage.getItem('token');
@@ -95,6 +109,12 @@ const AuthorsHomePage = () => {
         // Remove the deleted book from the state
         setBooks(books.filter(book => book.id !== parseInt(bookToDelete)));
         
+        // Show success notification
+        setNotification({
+          message: 'Story deleted successfully!',
+          type: 'success'
+        });
+        
         // Hide the dialog
         confirmDialog.classList.add('hidden');
         
@@ -103,6 +123,10 @@ const AuthorsHomePage = () => {
         cancelDeleteBtn.removeEventListener('click', cancelDeleteHandler);
       } catch (err) {
         setError('Failed to delete the story');
+        setNotification({
+          message: 'Failed to delete the story. Please try again.',
+          type: 'error'
+        });
         console.error(err);
         confirmDialog.classList.add('hidden');
       }
@@ -129,13 +153,27 @@ const AuthorsHomePage = () => {
     navigate('/');
   };
 
+  const handleNotificationClose = () => {
+    setNotification(null);
+  };
+
   if (error) {
     return <div className="error-message">{error}</div>;
   }
 
   return (
     <>
+      {notification && (
+        <Notification 
+          message={notification.message}
+          type={notification.type}
+          duration={3000}
+          onClose={handleNotificationClose}
+        />
+      )}
+    
       <header className="site-header">
+        {/* Header content remains the same */}
         <div className="header-left">
           <button onClick={handleBackClick} className="back-button">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -169,6 +207,7 @@ const AuthorsHomePage = () => {
         </div>
       </header>
 
+      {/* Rest of your component remains the same */}
       <div className="authors-homepage">
         <div className="page-header">
           <h1>My Books</h1>

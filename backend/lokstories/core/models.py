@@ -2,6 +2,15 @@ from django.db import models
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+
+
+def validate_file_size(file):
+    # 2MB limit (2 * 1024 * 1024 bytes)
+    max_size = 2 * 1024 * 1024
+    if file.size > max_size:
+        raise ValidationError(_('File size must not exceed 2 MB.'))
 
 # Define the Custom User Manager
 class CustomUserManager(BaseUserManager):
@@ -18,8 +27,11 @@ class CustomUserManager(BaseUserManager):
         """Create and return a superuser."""
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+    
         
         return self.create_user(username, password, **extra_fields)
+    
+   
 
 class User(AbstractBaseUser):  # Inherit from AbstractBaseUser
     id = models.AutoField(primary_key=True)
@@ -27,7 +39,7 @@ class User(AbstractBaseUser):  # Inherit from AbstractBaseUser
     username = models.CharField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
     role = models.CharField(max_length=50)
-    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True,validators=[validate_file_size])
 
     # Set the custom manager for this model
     objects = CustomUserManager()
@@ -61,7 +73,7 @@ class Story(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
     content = models.TextField()
-    cover_image = models.ImageField(upload_to='story_covers/', null=True, blank=True)
+    cover_image = models.ImageField(upload_to='story_covers/', null=True, blank=True,validators=[validate_file_size])
     genre = models.CharField(max_length=100)
     description = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE)

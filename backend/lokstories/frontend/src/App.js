@@ -18,10 +18,14 @@ import AdminComments from './pages/AdminComments';
 import Unauthorized from './pages/Unauthorized';
 import { ProtectedRoute, AdminRoute, AuthorRoute, ReaderRoute,ReaderAuthorRoute } from './pages/ProtectedRoute';
 import AuthChecker from './pages/AuthChecker';
+import SessionTimeoutHandler from './pages/SessionTimeoutHandler'; 
+import TokenRefresher from './pages/TokenRefresher';
 function App() {
   return (
     <Router>
       <AuthChecker />
+      <SessionTimeoutHandler /> 
+      <TokenRefresher />
       <div className="App">
         <Routes>
           <Route path="/" element={<LoginPage />} />

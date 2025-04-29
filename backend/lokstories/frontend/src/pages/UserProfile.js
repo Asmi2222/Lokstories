@@ -15,8 +15,12 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [previewImage, setPreviewImage] = useState(null);
   const [newImage, setNewImage] = useState(null);
+  const [showNotification, setShowNotification] = useState(false);
   
   const navigate = useNavigate();
+
+  const MAX_FILE_SIZE = 2 * 1024 * 1024;
+  const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/jpg'];
   
   useEffect(() => {
     // Get the JWT token from localStorage
@@ -61,6 +65,19 @@ const UserProfile = () => {
   const handleImageChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      // Check file type
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        toast.error('Please select a valid image file (JPEG, PNG, JPG).');
+        return;
+      }
+      
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error('Profile picture must be less than 2MB in size.');
+        return;
+      }
+      
       setNewImage(file);
       
       // Create preview
@@ -100,10 +117,27 @@ const UserProfile = () => {
       }
       setIsEditing(false);
       setLoading(false);
+      
+      // Show the custom notification
+      setShowNotification(true);
+      
+      // Hide notification after 3 seconds
+      setTimeout(() => {
+        setShowNotification(false);
+      }, 3000);
+      
+      // Still use toast for accessibility
       toast.success('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
+      
+      // Check if it's a file size error from the server
+      if (error.response?.data?.profile_picture) {
+        toast.error(`Profile picture error: ${error.response.data.profile_picture}`);
+      } else {
+        toast.error('Failed to update profile');
+      }
+      
       setLoading(false);
     }
   };
@@ -123,6 +157,14 @@ const UserProfile = () => {
 
   return (
     <div className="profile-card">
+      {/* Success notification */}
+      {showNotification && (
+        <div className="success-notification">
+          <div className="notification-icon">✓</div>
+          <div className="notification-message">Profile updated successfully!</div>
+        </div>
+      )}
+      
       {/* Header with gradient background and back button */}
       <div className="profile-header">
         <button className="back-btn" onClick={handleBack}>
@@ -148,12 +190,15 @@ const UserProfile = () => {
               )}
               
               {isEditing && (
-                <button 
-                  className="upload-btn"
-                  onClick={() => document.getElementById('profile_picture').click()}
-                >
-                  Change Photo
-                </button>
+                <div className="photo-upload-section">
+                  <button 
+                    className="upload-btn"
+                    onClick={() => document.getElementById('profile_picture').click()}
+                  >
+                    Change Photo
+                  </button>
+                  <div className="file-requirements">Max: 2MB, Formats: JPEG, PNG</div>
+                </div>
               )}
               <input
                 type="file"

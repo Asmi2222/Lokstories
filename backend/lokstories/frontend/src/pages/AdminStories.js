@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './Admin.css';
+import Notification from './Notification'; // Adjust the path as needed
 
 const AdminStories = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const AdminStories = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [storyToDelete, setStoryToDelete] = useState(null);
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
 
   useEffect(() => {
     fetchStories();
@@ -34,6 +36,9 @@ const AdminStories = () => {
       setError('Failed to load stories. Please make sure you have admin privileges.');
       setLoading(false);
       setRefreshing(false);
+      
+      // Show error notification
+      showNotification('Failed to load stories. Please make sure you have admin privileges.', 'error');
     }
   };
 
@@ -62,9 +67,15 @@ const AdminStories = () => {
       setStories(stories.filter(story => story.id !== storyToDelete.id));
       setShowDeleteConfirm(false);
       setStoryToDelete(null);
+      
+      // Show success notification
+      showNotification(`Story "${storyToDelete.title}" has been successfully deleted.`, 'success');
     } catch (err) {
       setError('Failed to delete story. Please try again.');
       setShowDeleteConfirm(false);
+      
+      // Show error notification
+      showNotification('Failed to delete story. Please try again.', 'error');
     }
   };
 
@@ -82,11 +93,29 @@ const AdminStories = () => {
     navigate(-1);
   };
 
+  // Helper function to show notifications
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+  };
+
+  const hideNotification = () => {
+    setNotification({ ...notification, show: false });
+  };
+
   if (loading) return <div className="loading">Loading stories...</div>;
   if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="admin-app-container">
+      {/* Notification */}
+      {notification.show && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={hideNotification}
+        />
+      )}
+
       {/* Sidebar Navigation */}
       <div className="admin-sidebar">
         <div className="logo-container">

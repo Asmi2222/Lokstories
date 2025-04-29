@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './UploadStory.css';
+import Notification from './Notification'; // Import Notification component
 
 const UploadStory = () => {
   const navigate = useNavigate();
@@ -25,10 +26,16 @@ const UploadStory = () => {
   const [showHistoricSiteFields, setShowHistoricSiteFields] = useState(false);
   const [showFoodFields, setShowFoodFields] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const [termsAgreed, setTermsAgreed] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [genres] = useState([
     'Fantasy', 'Science Fiction', 'Mystery', 'Romance', 'Thriller', 
     'Adventure', 'Historical Fiction', 'Horror', 'Literary Fiction', 'Other'
   ]);
+
+  const MAX_FILE_SIZE = 2 * 1024 * 1024;
+  const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/jpg'];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,6 +48,26 @@ const UploadStory = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Check file type
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        setError('Please select a valid image file (JPEG, PNG, JPG).');
+        setNotification({
+          message: 'Please select a valid image file (JPEG, PNG, JPG).',
+          type: 'error'
+        });
+        return;
+      }
+      
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        setError('Cover image must be less than 2MB in size.');
+        setNotification({
+          message: 'Cover image must be less than 2MB in size.',
+          type: 'error'
+        });
+        return;
+      }
+      
       setFormData({
         ...formData,
         cover_image: file
@@ -60,6 +87,16 @@ const UploadStory = () => {
       setShowModal(true);
       return false;
     }
+    
+    // Check if terms are agreed to
+    if (!termsAgreed) {
+      setNotification({
+        message: 'You must agree to the terms and conditions before submitting.',
+        type: 'error'
+      });
+      return false;
+    }
+    
     return true;
   };
 
@@ -113,14 +150,31 @@ const UploadStory = () => {
       });
       
       setLoading(false);
-      navigate('/authors-homepage');
+      
+      // Navigate with notification state
+      navigate('/authors-homepage', { 
+        state: { 
+          notification: {
+            message: 'Story uploaded successfully!',
+            type: 'success'
+          }
+        }
+      });
     } catch (err) {
       setLoading(false);
       
       if (err.code === 'ECONNABORTED') {
         setError('Request timed out. Server may be down or overloaded.');
+        setNotification({
+          message: 'Request timed out. Server may be down or overloaded.',
+          type: 'error'
+        });
       } else if (!err.response) {
         setError('Network error. Check your connection and server status.');
+        setNotification({
+          message: 'Network error. Check your connection and server status.',
+          type: 'error'
+        });
       } else {
         const errorData = err.response?.data;
         
@@ -130,8 +184,16 @@ const UploadStory = () => {
             .join('; ');
           
           setError(fieldErrors || 'Unknown server error. Please try again.');
+          setNotification({
+            message: fieldErrors || 'Unknown server error. Please try again.',
+            type: 'error'
+          });
         } else {
           setError(err.response?.data?.detail || 'Failed to upload story. Please try again.');
+          setNotification({
+            message: err.response?.data?.detail || 'Failed to upload story. Please try again.',
+            type: 'error'
+          });
         }
       }
     }
@@ -149,6 +211,19 @@ const UploadStory = () => {
     setShowModal(false);
   };
 
+  const closeTermsModal = () => {
+    setShowTermsModal(false);
+  };
+
+  const handleNotificationClose = () => {
+    setNotification(null);
+  };
+  
+  const openTermsModal = (e) => {
+    e.preventDefault();
+    setShowTermsModal(true);
+  };
+
   useEffect(() => {
     const testConnection = async () => {
       try {
@@ -156,6 +231,10 @@ const UploadStory = () => {
       } catch (err) {
         if (!err.response) {
           setError('Warning: Could not connect to server. Server may be down or unavailable.');
+          setNotification({
+            message: 'Warning: Could not connect to server. Server may be down or unavailable.',
+            type: 'warning'
+          });
         }
       }
     };
@@ -166,6 +245,15 @@ const UploadStory = () => {
   return (
     <>
     <div className='uploadStory'>
+      {notification && (
+        <Notification 
+          message={notification.message}
+          type={notification.type}
+          duration={3000}
+          onClose={handleNotificationClose}
+        />
+      )}
+      
       <header className="site-header">
       <div className="header-left">
           <button onClick={handleGoBack} className="back-button">
@@ -238,7 +326,9 @@ const UploadStory = () => {
           </div>
           
           <div className="form-group">
-            <label htmlFor="cover_image">Cover Image</label>
+            <label htmlFor="cover_image">
+              Cover Image <span className="file-requirements">(Max: 2MB, Formats: JPEG, PNG)</span>
+            </label>
             {imagePreview ? (
               <div className="image-preview">
                 <img src={imagePreview} alt="Cover preview" />
@@ -389,6 +479,23 @@ const UploadStory = () => {
             </div>
           )}
           
+          {/* Terms and Conditions Agreement */}
+          <div className="form-group terms-agreement">
+            <div className="checkbox-container">
+              <input
+                type="checkbox"
+                id="terms-checkbox"
+                checked={termsAgreed}
+                onChange={() => setTermsAgreed(!termsAgreed)}
+              />
+              <label htmlFor="terms-checkbox" className="checkbox-label">
+                I certify that this content is original, created by me, and does not contain plagiarized material.
+                I have properly credited all sources used in the creation of this work.{' '}
+                <a href="#" onClick={openTermsModal}>Read full terms and conditions</a>
+              </label>
+            </div>
+          </div>
+          
           <div className="form-actions">
             <button 
               type="button" 
@@ -426,6 +533,69 @@ const UploadStory = () => {
             <div className="modal-actions">
               <button className="modal-button" onClick={closeModal}>
                 Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Terms and Conditions Modal */}
+      {showTermsModal && (
+        <div className="modal-overlay" onClick={closeTermsModal}>
+          <div className="modal-content terms-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#f5840c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 16H12.01" stroke="#f5840c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 8V12" stroke="#f5840c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Terms and Conditions
+            </div>
+            <div className="modal-body terms-body">
+              <h4>Content Ownership and Copyright</h4>
+              <p>By uploading a story to Lokstories, you confirm that:</p>
+              <ol>
+                <li>You are the original author of the content or have all necessary rights to publish it.</li>
+                <li>The content does not infringe on any intellectual property rights, including copyright, trademark, or patent rights of any third party.</li>
+                <li>You have properly attributed and cited any sources, references, or inspirations used in the creation of your work.</li>
+                <li>You understand that plagiarism or unauthorized use of others' content is strictly prohibited.</li>
+              </ol>
+              
+              <h4>Content Guidelines</h4>
+              <p>You agree that your story:</p>
+              <ol>
+                <li>Does not contain content that is defamatory, libelous, or fraudulent.</li>
+                <li>Does not violate any applicable laws or regulations.</li>
+                <li>Does not contain content that promotes discrimination, hate speech, or violence.</li>
+                <li>Properly credits historic sites, food locations, and other referenced places or establishments.</li>
+              </ol>
+              
+              <h4>Violations and Consequences</h4>
+              <p>You understand that:</p>
+              <ol>
+                <li>Lokstories reserves the right to remove content that violates these terms.</li>
+                <li>Repeated violations may result in account suspension or termination.</li>
+                <li>You may be held legally responsible for any copyright infringement or other legal violations in your content.</li>
+              </ol>
+              
+              <h4>License Grant</h4>
+              <p>By submitting your story, you grant Lokstories a non-exclusive license to display, promote, and share your content on our platform while you retain all ownership rights to your original work.</p>
+            </div>
+            <div className="modal-actions">
+              <button 
+                className="modal-button" 
+                onClick={() => {
+                  setTermsAgreed(true);
+                  closeTermsModal();
+                }}
+              >
+                I Agree
+              </button>
+              <button 
+                className="modal-button-secondary" 
+                onClick={closeTermsModal}
+              >
+                Close
               </button>
             </div>
           </div>

@@ -29,6 +29,10 @@ const StoryPage = () => {
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
 
+  const [showCommentSuccessPopup, setShowCommentSuccessPopup] = useState(false);
+const [showDeleteSuccessPopup, setShowDeleteSuccessPopup] = useState(false);
+const [commentActionMessage, setCommentActionMessage] = useState('');
+
   // Map URL states
   const [mapUrl, setMapUrl] = useState({
     historic: "",
@@ -206,6 +210,15 @@ const StoryPage = () => {
       
       setComments([...comments, response.data]);
       setNewComment('');
+      
+      // Show success popup
+      setCommentActionMessage('Comment added successfully!');
+      setShowCommentSuccessPopup(true);
+      
+      // Auto-close popup after 3 seconds
+      setTimeout(() => {
+        setShowCommentSuccessPopup(false);
+      }, 3000);
     } catch (err) {
       console.error('Failed to submit comment:', err);
       alert(err.response?.data?.detail || 'Failed to post comment. Please try again.');
@@ -218,7 +231,6 @@ const StoryPage = () => {
     setShowDeleteConfirmation(true);
   };
 
-  // Actual delete function after confirmation
   const confirmDeleteComment = async () => {
     if (!commentToDelete) return;
     
@@ -227,6 +239,15 @@ const StoryPage = () => {
       setComments(comments.filter(comment => comment.id !== commentToDelete));
       setShowDeleteConfirmation(false);
       setCommentToDelete(null);
+      
+      // Show success popup
+      setCommentActionMessage('Comment deleted successfully!');
+      setShowDeleteSuccessPopup(true);
+      
+      // Auto-close popup after 3 seconds
+      setTimeout(() => {
+        setShowDeleteSuccessPopup(false);
+      }, 3000);
     } catch (err) {
       console.error('Failed to delete comment:', err);
       alert(err.response?.data?.detail || 'You can only delete your own comments');
@@ -453,9 +474,9 @@ const StoryPage = () => {
       
       {/* Thank You Popup */}
       {showThankYouPopup && (
-        <div className="thank-you-popup">
-          <div className="thank-you-content">
-            <div className="thank-you-icon">✓</div>
+        <div className="success-popup thank-you-popup">
+          <div className="success-content">
+            <div className="success-icon">✓</div>
             <h3>Thank You!</h3>
             <p>Your rating has been submitted successfully.</p>
           </div>
@@ -697,6 +718,27 @@ const StoryPage = () => {
                           Delete
                         </button>
                       )}
+                        {/* Comment Added Success Popup */}
+                        {showCommentSuccessPopup && (
+                          <div className="success-popup comment-success">
+                            <div className="success-content">
+                              <div className="success-icon">✓</div>
+                              <h3>Success!</h3>
+                              <p>{commentActionMessage}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Comment Deleted Success Popup */}
+                        {showDeleteSuccessPopup && (
+                          <div className="success-popup delete-success">
+                            <div className="success-content">
+                              <div className="success-icon">✓</div>
+                              <h3>Success!</h3>
+                              <p>{commentActionMessage}</p>
+                            </div>
+                          </div>
+                        )}
                     </div></div>
                   </div>
                 </div>
