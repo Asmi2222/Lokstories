@@ -30,7 +30,7 @@ const LoginPage = () => {
     // Auto-dismiss notification after 4 seconds
     setTimeout(() => {
       setNotification(prev => ({ ...prev, show: false }));
-    }, 4000);
+    }, 8000);
   };
 
   const handleSubmit = async (e) => {

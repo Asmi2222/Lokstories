@@ -92,6 +92,8 @@ const EditStory = () => {
   const [showFoodFields, setShowFoodFields] = useState(false);
   const [showImageInput, setShowImageInput] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
+  const [showModal, setShowModal] = useState(false);
 
   // Added file size and type validation constants
   const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
@@ -192,6 +194,66 @@ const EditStory = () => {
       ...formData,
       [name]: value
     });
+    
+    // Clear error for this field when user starts typing
+    if (formErrors[name]) {
+      setFormErrors({
+        ...formErrors,
+        [name]: null
+      });
+    }
+  };
+
+  // URL validation helper function
+  const isValidUrl = (url) => {
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  // Validate form before submission
+  const validateForm = () => {
+    let errors = {};
+    let isValid = true;
+    
+    // Validate required fields
+    if (!formData.title.trim()) {
+      errors.title = "Title is required";
+      isValid = false;
+    }
+    
+    if (!formData.genre.trim()) {
+      errors.genre = "Genre is required";
+      isValid = false;
+    }
+    
+    if (!formData.description.trim()) {
+      errors.description = "Description is required";
+      isValid = false;
+    }
+    
+    if (!formData.content.trim()) {
+      errors.content = "Story content is required";
+      isValid = false;
+    }
+    
+    // URL validation for historic site
+    if (showHistoricSiteFields && formData.historic_site_url && !isValidUrl(formData.historic_site_url)) {
+      errors.historic_site_url = "Please enter a valid URL (e.g., https://example.com)";
+      isValid = false;
+    }
+    
+    // URL validation for restaurant
+    if (showFoodFields && formData.restaurant_url && !isValidUrl(formData.restaurant_url)) {
+      errors.restaurant_url = "Please enter a valid URL (e.g., https://example.com)";
+      isValid = false;
+    }
+    
+    setFormErrors(errors);
+    return isValid;
   };
 
   // Updated handleImageChange with file size and type validation
@@ -263,6 +325,20 @@ const EditStory = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate form before submission
+    if (!validateForm()) {
+      // Show first error as notification
+      const firstError = Object.values(formErrors).find(error => error);
+      if (firstError) {
+        setNotification({
+          message: firstError,
+          type: 'error'
+        });
+      }
+      return;
+    }
+    
     setSubmitting(true);
     setError(null);
 
@@ -400,6 +476,10 @@ const EditStory = () => {
   const handleNotificationClose = () => {
     setNotification(null);
   };
+  
+  const closeModal = () => {
+    setShowModal(false);
+  };
 
   // Server connection test 
   useEffect(() => {
@@ -452,7 +532,7 @@ const EditStory = () => {
         
         {error && <div className="error-message">{error}</div>}
         
-        <form onSubmit={handleSubmit} className="upload-form">
+        <form onSubmit={handleSubmit} className="upload-form" noValidate>
           <div className="form-group">
             <label htmlFor="title">Title</label>
             <input
@@ -462,8 +542,9 @@ const EditStory = () => {
               value={formData.title}
               onChange={handleChange}
               placeholder="Enter your story title"
-              required
+              className={formErrors.title ? "error-input" : ""}
             />
+            {formErrors.title && <div className="field-error">{formErrors.title}</div>}
           </div>
           
           <div className="form-group">
@@ -475,8 +556,9 @@ const EditStory = () => {
               value={formData.genre}
               onChange={handleChange}
               placeholder="Enter a genre"
-              required
+              className={formErrors.genre ? "error-input" : ""}
             />
+            {formErrors.genre && <div className="field-error">{formErrors.genre}</div>}
           </div>
           
           <div className="form-group">
@@ -488,8 +570,9 @@ const EditStory = () => {
               onChange={handleChange}
               placeholder="Briefly describe your story (will appear in previews)"
               rows="3"
-              required
+              className={formErrors.description ? "error-input" : ""}
             ></textarea>
+            {formErrors.description && <div className="field-error">{formErrors.description}</div>}
           </div>
           
           <div className="form-group">
@@ -501,8 +584,9 @@ const EditStory = () => {
               onChange={handleChange}
               placeholder="Write your story here..."
               rows="10"
-              required
+              className={formErrors.content ? "error-input" : ""}
             ></textarea>
+            {formErrors.content && <div className="field-error">{formErrors.content}</div>}
           </div>
           
           {/* Enhanced Cover Image Section with Orange Buttons + File Size Notification */}
@@ -601,13 +685,15 @@ const EditStory = () => {
               <div className="form-group">
                 <label htmlFor="historic_site_url">Historic Site URL</label>
                 <input
-                  type="url"
+                  type="text"
                   id="historic_site_url"
                   name="historic_site_url"
                   value={formData.historic_site_url}
                   onChange={handleChange}
                   placeholder="https://example.com"
+                  className={formErrors.historic_site_url ? "error-input" : ""}
                 />
+                {formErrors.historic_site_url && <div className="field-error">{formErrors.historic_site_url}</div>}
               </div>
             </div>
           )}
@@ -667,13 +753,39 @@ const EditStory = () => {
               <div className="form-group">
                 <label htmlFor="restaurant_url">Restaurant URL</label>
                 <input
-                  type="url"
+                  type="text"
                   id="restaurant_url"
                   name="restaurant_url"
                   value={formData.restaurant_url}
                   onChange={handleChange}
                   placeholder="https://example.com"
+                  className={formErrors.restaurant_url ? "error-input" : ""}
                 />
+                {formErrors.restaurant_url && <div className="field-error">{formErrors.restaurant_url}</div>}
+              </div>
+            </div>
+          )}
+          
+          {/* Modal Popup for validation errors */}
+          {showModal && (
+            <div className="modal-overlay" onClick={closeModal}>
+              <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#E53E3E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 8V12" stroke="#E53E3E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 16H12.01" stroke="#E53E3E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  Form Validation Error
+                </div>
+                <div className="modal-body">
+                  Please fill in all required fields before submitting the form.
+                </div>
+                <div className="modal-actions">
+                  <button className="modal-button" onClick={closeModal}>
+                    Got it
+                  </button>
+                </div>
               </div>
             </div>
           )}

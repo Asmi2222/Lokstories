@@ -161,7 +161,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1800),  
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Longer lifetime for refresh token
     'ROTATE_REFRESH_TOKENS': False,  # Don't rotate refresh tokens to keep things simple
     'BLACKLIST_AFTER_ROTATION': False,  # Don't blacklist old refresh tokens
@@ -202,6 +202,6 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 2 * 1024 * 1024
 
 # Session timeout settings
-SESSION_COOKIE_AGE = 1800  #30 minutes in seconds
+SESSION_COOKIE_AGE = 18000  #30 minutes in seconds
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_SAVE_EVERY_REQUEST = True  # Reset the timeout on every request

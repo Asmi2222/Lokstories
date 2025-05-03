@@ -503,3 +503,39 @@ input[type="file"] {
 .modal-button-secondary:hover {
   background-color: #e5e5e5;
 }
+/* Error input styles */
+.error-input {
+  border: 2px solid #e53e3e !important;
+  background-color: rgba(229, 62, 62, 0.05) !important;
+}
+
+.error-button {
+  border-color: #e53e3e !important;
+  color: #e53e3e !important;
+}
+
+.error-checkbox {
+  outline: 2px solid #e53e3e !important;
+}
+
+.error-label {
+  color: #e53e3e !important;
+}
+
+/* Error message styling */
+.field-error {
+  color: #e53e3e;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  padding-left: 2px;
+}
+
+.terms-error {
+  margin-top: 4px;
+}
+
+/* Disable the browser's default validation bubbles */
+input:invalid,
+textarea:invalid {
+  box-shadow: none;
+}

@@ -3,7 +3,15 @@ import { useNavigate } from 'react-router-dom';
 
 const Unauthorized = () => {
   const navigate = useNavigate();
-
+  const logout = () => {
+    // Clear tokens from localStorage/sessionStorage
+    localStorage.removeItem('token');
+    // Add any other cleanup needed
+  };
+  const handleReturnToLogin = () => {
+    logout(); // Clear user session
+    navigate('/login'); // Redirect to login page
+  };
   return (
     <div className="unauth-container">
       <div className="unauth-card">
@@ -20,7 +28,7 @@ const Unauthorized = () => {
         </p>
         <button 
           className="unauth-button"
-          onClick={() => navigate('/')}
+          onClick={handleReturnToLogin}
         >
           Return to Login
         </button>

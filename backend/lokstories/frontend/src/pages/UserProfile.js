@@ -160,7 +160,7 @@ const UserProfile = () => {
       {/* Success notification */}
       {showNotification && (
         <div className="success-notification">
-          <div className="notification-icon">✓</div>
+          <div className="user-notification-icon">✓</div>
           <div className="notification-message">Profile updated successfully!</div>
         </div>
       )}

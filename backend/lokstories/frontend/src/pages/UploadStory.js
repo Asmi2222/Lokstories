@@ -29,6 +29,7 @@ const UploadStory = () => {
   const [notification, setNotification] = useState(null);
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
   const [genres] = useState([
     'Fantasy', 'Science Fiction', 'Mystery', 'Romance', 'Thriller', 
     'Adventure', 'Historical Fiction', 'Horror', 'Literary Fiction', 'Other'
@@ -43,6 +44,14 @@ const UploadStory = () => {
       ...formData,
       [name]: value
     });
+    
+    // Clear error for this field when user starts typing
+    if (formErrors[name]) {
+      setFormErrors({
+        ...formErrors,
+        [name]: null
+      });
+    }
   };
 
   const handleImageChange = (e) => {
@@ -73,6 +82,14 @@ const UploadStory = () => {
         cover_image: file
       });
       
+      // Clear any previous image error
+      if (formErrors.cover_image) {
+        setFormErrors({
+          ...formErrors,
+          cover_image: null
+        });
+      }
+      
       const reader = new FileReader();
       reader.onload = () => {
         setImagePreview(reader.result);
@@ -82,29 +99,89 @@ const UploadStory = () => {
   };
 
   const validateForm = () => {
+    let errors = {};
+    let isValid = true;
+    
+    // Validate required fields
+    if (!formData.title.trim()) {
+      errors.title = "Title is required";
+      isValid = false;
+    }
+    
+    if (!formData.genre.trim()) {
+      errors.genre = "Genre is required";
+      isValid = false;
+    }
+    
+    if (!formData.description.trim()) {
+      errors.description = "Description is required";
+      isValid = false;
+    }
+    
+    if (!formData.content.trim()) {
+      errors.content = "Story content is required";
+      isValid = false;
+    }
+    
     // Check if cover image is provided
     if (!formData.cover_image) {
+      errors.cover_image = "Cover image is required";
       setShowModal(true);
-      return false;
+      isValid = false;
+    }
+    
+    // URL validation for historic site
+    if (showHistoricSiteFields && formData.historic_site_url && !isValidUrl(formData.historic_site_url)) {
+      errors.historic_site_url = "Please enter a valid URL (e.g., https://example.com)";
+      isValid = false;
+    }
+    
+    // URL validation for restaurant
+    if (showFoodFields && formData.restaurant_url && !isValidUrl(formData.restaurant_url)) {
+      errors.restaurant_url = "Please enter a valid URL (e.g., https://example.com)";
+      isValid = false;
     }
     
     // Check if terms are agreed to
     if (!termsAgreed) {
+      errors.terms = "You must agree to the terms and conditions before submitting";
       setNotification({
         message: 'You must agree to the terms and conditions before submitting.',
         type: 'error'
       });
-      return false;
+      isValid = false;
     }
     
-    return true;
+    setFormErrors(errors);
+    return isValid;
+  };
+  
+  // URL validation helper function
+  const isValidUrl = (url) => {
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Prevent default browser validation
+    e.preventDefault();
+    
     // Validate form before submission
     if (!validateForm()) {
+      // Show first error as notification
+      const firstError = Object.values(formErrors).find(error => error);
+      if (firstError) {
+        setNotification({
+          message: firstError,
+          type: 'error'
+        });
+      }
       return;
     }
     
@@ -272,7 +349,7 @@ const UploadStory = () => {
         
         {error && <div className="error-message">{error}</div>}
         
-        <form onSubmit={handleSubmit} className="upload-form">
+        <form onSubmit={handleSubmit} className="upload-form" noValidate>
           <div className="form-group">
             <label htmlFor="title">Title</label>
             <input
@@ -282,8 +359,9 @@ const UploadStory = () => {
               value={formData.title}
               onChange={handleChange}
               placeholder="Enter your story title"
-              required
+              className={formErrors.title ? "error-input" : ""}
             />
+            {formErrors.title && <div className="field-error">{formErrors.title}</div>}
           </div>
           
           <div className="form-group">
@@ -295,8 +373,9 @@ const UploadStory = () => {
               value={formData.genre}
               onChange={handleChange}
               placeholder="Enter a genre"
-              required
+              className={formErrors.genre ? "error-input" : ""}
             />
+            {formErrors.genre && <div className="field-error">{formErrors.genre}</div>}
           </div>
           
           <div className="form-group">
@@ -308,8 +387,9 @@ const UploadStory = () => {
               onChange={handleChange}
               placeholder="Briefly describe your story (will appear in previews)"
               rows="3"
-              required
+              className={formErrors.description ? "error-input" : ""}
             ></textarea>
+            {formErrors.description && <div className="field-error">{formErrors.description}</div>}
           </div>
           
           <div className="form-group">
@@ -321,8 +401,9 @@ const UploadStory = () => {
               onChange={handleChange}
               placeholder="Write your story here..."
               rows="10"
-              required
+              className={formErrors.content ? "error-input" : ""}
             ></textarea>
+            {formErrors.content && <div className="field-error">{formErrors.content}</div>}
           </div>
           
           <div className="form-group">
@@ -351,10 +432,12 @@ const UploadStory = () => {
                   name="cover_image"
                   accept="image/*"
                   onChange={handleImageChange}
+                  className={formErrors.cover_image ? "error-input" : ""}
                 />
-                <label htmlFor="cover_image" className="cover-image-button">
+                <label htmlFor="cover_image" className={`cover-image-button ${formErrors.cover_image ? "error-button" : ""}`}>
                   Choose Cover Image
                 </label>
+                {formErrors.cover_image && <div className="field-error">{formErrors.cover_image}</div>}
               </>
             )}
           </div>
@@ -402,13 +485,15 @@ const UploadStory = () => {
               <div className="form-group">
                 <label htmlFor="historic_site_url">Historic Site URL</label>
                 <input
-                  type="url"
+                  type="text"
                   id="historic_site_url"
                   name="historic_site_url"
                   value={formData.historic_site_url}
                   onChange={handleChange}
                   placeholder="https://example.com"
+                  className={formErrors.historic_site_url ? "error-input" : ""}
                 />
+                {formErrors.historic_site_url && <div className="field-error">{formErrors.historic_site_url}</div>}
               </div>
             </div>
           )}
@@ -468,13 +553,15 @@ const UploadStory = () => {
               <div className="form-group">
                 <label htmlFor="restaurant_url">Restaurant URL</label>
                 <input
-                  type="url"
+                  type="text"
                   id="restaurant_url"
                   name="restaurant_url"
                   value={formData.restaurant_url}
                   onChange={handleChange}
                   placeholder="https://example.com"
+                  className={formErrors.restaurant_url ? "error-input" : ""}
                 />
+                {formErrors.restaurant_url && <div className="field-error">{formErrors.restaurant_url}</div>}
               </div>
             </div>
           )}
@@ -486,14 +573,24 @@ const UploadStory = () => {
                 type="checkbox"
                 id="terms-checkbox"
                 checked={termsAgreed}
-                onChange={() => setTermsAgreed(!termsAgreed)}
+                onChange={() => {
+                  setTermsAgreed(!termsAgreed);
+                  if (formErrors.terms) {
+                    setFormErrors({
+                      ...formErrors,
+                      terms: null
+                    });
+                  }
+                }}
+                className={formErrors.terms ? "error-checkbox" : ""}
               />
-              <label htmlFor="terms-checkbox" className="checkbox-label">
+              <label htmlFor="terms-checkbox" className={`checkbox-label ${formErrors.terms ? "error-label" : ""}`}>
                 I certify that this content is original, created by me, and does not contain plagiarized material.
                 I have properly credited all sources used in the creation of this work.{' '}
                 <a href="#" onClick={openTermsModal}>Read full terms and conditions</a>
               </label>
             </div>
+            {formErrors.terms && <div className="field-error terms-error">{formErrors.terms}</div>}
           </div>
           
           <div className="form-actions">
@@ -574,7 +671,7 @@ const UploadStory = () => {
               <p>You understand that:</p>
               <ol>
                 <li>Lokstories reserves the right to remove content that violates these terms.</li>
-                <li>Repeated violations may result in account suspension or termination.</li>
+                <li>Repeated violations may result in account termination.</li>
                 <li>You may be held legally responsible for any copyright infringement or other legal violations in your content.</li>
               </ol>
               

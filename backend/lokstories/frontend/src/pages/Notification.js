@@ -37,7 +37,7 @@ const Notification = ({ message, type = 'success', duration = 3000, onClose }) =
       case 'success':
         return <i className="fas fa-check-circle"></i>;
       case 'error':
-        return <i className="fas fa-exclamation-circle"></i>;
+        return <i className="fas fa-exclamation-circle" style={{ color: 'red !important' }}></i>;
       case 'warning':
         return <i className="fas fa-exclamation-triangle"></i>;
       case 'info':
